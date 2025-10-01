@@ -1,0 +1,79 @@
+/* 总体使用grid布局 */
+#container{
+  height: 100vh;
+  width: 100vw;
+  display: grid;
+  grid-template-columns: minmax(70px,1fr) 5fr;
+  grid-template-rows: 70% 30%;
+  grid-template-areas: 
+    'players card-pool'
+    'players my-behaviour';
+}
+/* players部分使用flex纵向布局*/
+#players{
+  grid-area: players;
+  display: flex;
+  align-items:stretch;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: left;
+  gap:0.5rem;
+  min-width: 0;
+  overflow: hidden;
+  background-color: azure;
+  /* border: solid 1px springgreen; */
+}
+  /* 每一行内包含头像和筹码 */
+  .one-player{
+    border-radius: 10%;
+    background-color: aliceblue;
+    width:100%;
+    height: 25px;
+    box-sizing: border-box;
+    display: flex;
+    flex-shrink: 0;
+    }
+  .me{
+    background-color: blanchedalmond;
+    }
+  .profile-photo,.personal-bet{
+    display:flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap:3px;
+    }
+  .profile-photo{
+    aspect-ratio: 1/1;
+    height:80%;
+    width: auto;
+    margin:auto;
+    flex-shrink: 0; 
+    border-radius: 50%;
+    overflow: hidden;
+
+    border: solid 1px rgba(0, 0, 0, 0.038);
+  }
+  .profile-photo img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+  .personal-bet{
+    flex-grow: 1;
+    flex-shrink: 1;
+    border: solid 1px rgba(0, 0, 0, 0.038);
+    justify-content: center; 
+    align-items: center; 
+  }
+
+/* card-pool部分采取flex居中对齐 */
+#card-pool{
+  grid-area: card-pool;
+  display: flex;
+  flex-direction: row;
+  
+}
+
+
+/* my-behaviour部分采取flex居中对齐 */
