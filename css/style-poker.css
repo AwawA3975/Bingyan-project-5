@@ -3,5 +3,11 @@
   border-radius: 3px;
   width: 50px;
   height: 70px;
+  box-sizing: border-box;
+  background-color: whitesmoke;
   
+}
+#card-all{
+  text-align: center;
+  padding: 20px;
 }

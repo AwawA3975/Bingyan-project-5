@@ -1,10 +1,18 @@
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden; /* 禁用全局滚动，由 #container 内部滚动 */
+}
+
 /* 总体使用grid布局 */
 #container{
   height: 100vh;
   width: 100vw;
   display: grid;
   grid-template-columns: minmax(70px,1fr) 5fr;
-  grid-template-rows: 70% 30%;
+  grid-template-rows: 3fr 1fr;
+  min-height: 350px;
+  overflow: auto;
   grid-template-areas: 
     'players card-pool'
     'players my-behaviour';
@@ -31,7 +39,7 @@
     height: 25px;
     box-sizing: border-box;
     display: flex;
-    flex-shrink: 0;
+    flex:none;
     }
   .me{
     background-color: blanchedalmond;
@@ -67,13 +75,40 @@
     align-items: center; 
   }
 
-/* card-pool部分采取flex居中对齐 */
+/* card-pool部分采取grid布局嵌套flex布局，使牌面居中对齐，牌堆单独居于左上角 */
+/* grid布局 */
 #card-pool{
   grid-area: card-pool;
-  display: flex;
-  flex-direction: row;
-  
+  display: grid;
+  grid-template-areas: 
+  'header'
+  'body';
+  grid-template-rows: 90px 1fr;
+  height: 100%;
+  min-height: 0; 
 }
 
+.header{
+  grid-area: header;
+  padding: 10px;
+}
+/*body使用 flex布局 */
+.pool{
+  grid-area: body;
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  gap: 0.5rem;
+}
 
 /* my-behaviour部分采取flex居中对齐 */
+#my-behaviour{
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap:10px;
+  min-height:0;
+}
