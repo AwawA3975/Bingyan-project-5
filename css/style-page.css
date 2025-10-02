@@ -75,14 +75,16 @@ html, body {
     align-items: center; 
   }
 
-/* card-pool部分采取grid布局嵌套flex布局，使牌面居中对齐，牌堆单独居于左上角 */
+/* card-pool部分采取grid布局嵌套flex布局，
+使牌面居中对齐，牌堆单独居于左上角,自己的牌位于右上角 */
 /* grid布局 */
 #card-pool{
   grid-area: card-pool;
   display: grid;
   grid-template-areas: 
-  'header'
-  'body';
+  'header my-card'
+  'body body';
+  grid-template-columns:70px 1fr ;
   grid-template-rows: 90px 1fr;
   height: 100%;
   min-height: 0; 
@@ -90,6 +92,15 @@ html, body {
 
 .header{
   grid-area: header;
+  padding: 10px;
+}
+/* my-card部分采取flex布局 */
+.my-card{
+  grid-area: my-card;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: right;
+  gap:0.5rem;
   padding: 10px;
 }
 /*body使用 flex布局 */
@@ -101,6 +112,7 @@ html, body {
   align-items: center;
   overflow: hidden;
   gap: 0.5rem;
+  padding: 10px;
 }
 
 /* my-behaviour部分采取flex居中对齐 */
