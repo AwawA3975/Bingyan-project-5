@@ -1,13 +1,70 @@
+/* 先设计静态正面/背面牌面 */
 .card{
-  border: solid 1px black;
+  border: solid 1px rgba(0, 0, 0, 0.202);
   border-radius: 3px;
   width: 50px;
   height: 70px;
   box-sizing: border-box;
-  background-color: whitesmoke;
-  
-}
-#card-all{
+  font-family: Georgia, serif;
   text-align: center;
+  transform-style: preserve-3d;
+  perspective: 1000px;
+
+}
+/* #card-all{
   padding: 20px;
+  font-size:20px;
+} */
+
+.card-front.card-back{
+  backface-visibility: hidden;
+}
+/* 翻转效果 */
+.card-back{
+  background: linear-gradient(135deg,rgb(225, 223, 223),55%,rgba(33, 33, 33, 0.99));
+  transform:rotateY(0deg);
+}
+.card-front{
+  color: white;
+  transform: rotateY(180deg); 
+}
+.card.flipped .card-back {
+  transform: rotateY(180deg); 
+} /* 背面隐藏 */
+.card.flipped .card-front {
+  transform: rotateY(0deg); 
+}  /* 正面可见 */
+
+/* 背景 */
+.card-front::after{
+  content: '';
+  width: 100%;
+  height:100%;
+  background-image: inherit; 
+  opacity: 0.5; 
+  z-index: -1;
+}
+.card[diamond]{
+  background-image: url(../sources/diamond.png);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size:50px,70px;
+}
+.card-front.heart{
+  background-image: url(../sources/heart.png);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size:50px,70px;
+}
+.card-front.spade{
+  background-image: url(../sources/spade.png);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size:50px,70px;
+}
+.card-front.club{
+  background-image: url(../sources/club.png);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size:50px,70px;
 }

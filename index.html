@@ -10,44 +10,94 @@
 
 <body>
 <div id="container">
+  <!-- 左侧玩家/筹码 -->
   <div id="players">
     <div class="one-player me">
       <div class="profile-photo"><img src="./sources/头像/1.png" alt="me"></div>
-      <div class="personal-bet">筹码</div>
+      <div class="personal-bet"><span>筹码</span></div>
     </div>
     <div class="one-player">
       <div class="profile-photo"><img src="./sources/头像/2.png" alt="player-1"></div>
-      <div class="personal-bet">筹码</div>
+      <div class="personal-bet"><span>筹码</span></div>
     </div>
     <div class="one-player">
       <div class="profile-photo"><img src="./sources/头像/3.png" alt="player-2"></div>
-      <div class="personal-bet">筹码</div>
+      <div class="personal-bet"><span>筹码</span></div>
     </div>
     <div class="one-player">
       <div class="profile-photo"><img src="./sources/头像/2.png" alt="player-3"></div>
-      <div class="personal-bet">筹码</div>
+      <div class="personal-bet"><span>筹码</span></div>
     </div>
     <div class="one-player">
       <div class="profile-photo"><img src="./sources/头像/1.png" alt="player-4"></div>
-      <div class="personal-bet">筹码</div>
+      <div class="personal-bet"><span>筹码</span></div>
     </div>
     
+    <div class="bet-pool">
+      筹码池
+    </div>
   </div>
 
+  <!-- 右侧上方牌池 -->
   <div id="card-pool" style="background-color: antiquewhite;">
+    <!-- 左上方总牌堆 -->
     <div class="header">
-      <div id="card-all" class="card">1</div>
+      <div class="card" data-suit="hearts" data-value="K">
+        <div class="card-back"></div>
+        <div class="card-front">
+          <span class="number">K</span>
+        </div>
+      </div>
     </div>
+
+    <!-- 右上方 我的手牌 -->
     <div class="my-card">
-        <div class="card">♥A</div>
-        <div class="card">♥A</div>
+      <div class="card" data-suit="hearts" data-value="K">
+        <div class="card-back"></div>
+        <div class="card-front">
+          <span class="number">K</span>
+        </div>
+      </div>
+      <div class="card" data-suit="hearts" data-value="K">
+        <div class="card-back"></div>
+        <div class="card-front">
+          <span class="number">K</span>
+        </div>
+      </div>
     </div>
+
+    <!-- 中间 五张牌 -->
     <div class="pool">
-      <div class="card">♥A</div>
-      <div class="card">♥A</div>
-      <div class="card">♥A</div>
-      <div class="card">♥A</div>
-      <div class="card">♥A</div>
+      <div class="card" data-suit="hearts" data-value="K">
+        <div class="card-back"></div>
+        <div class="card-front">
+          <span class="number">K</span>
+        </div>
+      </div>
+      <div class="card" data-suit="hearts" data-value="K">
+        <div class="card-back"></div>
+        <div class="card-front">
+          <span class="number">K</span>
+        </div>
+      </div>
+      <div class="card" data-suit="hearts" data-value="K">
+        <div class="card-back"></div>
+        <div class="card-front">
+          <span class="number">K</span>
+        </div>
+      </div>
+      <div class="card" data-suit="hearts" data-value="K">
+        <div class="card-back"></div>
+        <div class="card-front">
+          <span class="number">K</span>
+        </div>
+      </div>
+      <div class="card" data-suit="hearts" data-value="K">
+        <div class="card-back"></div>
+        <div class="card-front">
+          <span class="number">K</span>
+        </div>
+      </div>
     </div>
   </div>
 
