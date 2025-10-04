@@ -1,5 +1,5 @@
 /* 先设计静态正面/背面牌面 */
-.card{
+.card,.cards{
   border: solid 1px rgba(0, 0, 0, 0.202);
   border-radius: 3px;
   width: 50px;
@@ -10,24 +10,32 @@
   transform-style: preserve-3d;
   perspective: 1000px;
 
+  display: flex; /* 使用flex布局内部元素 */
+  justify-content: center;
+  align-items: center;
+  position: relative; /* 相对定位但不影响外部布局 */
 }
-/* #card-all{
-  padding: 20px;
-  font-size:20px;
-} */
-
-.card-front.card-back{
+.card-front,.card-back{
+  border-radius: 3px;
   backface-visibility: hidden;
+  position: absolute; 
+  width:inherit;
+  height:inherit;
 }
 /* 翻转效果 */
 .card-back{
   background: linear-gradient(135deg,rgb(225, 223, 223),55%,rgba(33, 33, 33, 0.99));
   transform:rotateY(0deg);
+  z-index: 2; 
+  border: 1px dashed red;
 }
 .card-front{
   color: white;
   transform: rotateY(180deg); 
+  z-index: 1; 
+  border: 1px dashed rgb(47, 0, 255); 
 }
+
 .card.flipped .card-back {
   transform: rotateY(180deg); 
 } /* 背面隐藏 */
@@ -44,27 +52,27 @@
   opacity: 0.5; 
   z-index: -1;
 }
-.card[diamond]{
+.card[data-suit='♦'].card-front{
   background-image: url(../sources/diamond.png);
   background-position: center;
   background-repeat: no-repeat;
-  background-size:50px,70px;
+  background-size:50px 70px;
 }
-.card-front.heart{
+.card[data-suit='♥'].card-front{
   background-image: url(../sources/heart.png);
   background-position: center;
   background-repeat: no-repeat;
-  background-size:50px,70px;
+  background-size:50px 70px;
 }
-.card-front.spade{
+.card[data-suit='♠'].card-front{
   background-image: url(../sources/spade.png);
   background-position: center;
   background-repeat: no-repeat;
-  background-size:50px,70px;
+  background-size:50px 70px;
 }
-.card-front.club{
+.card[data-suit='♣'].card-front{
   background-image: url(../sources/club.png);
   background-position: center;
   background-repeat: no-repeat;
-  background-size:50px,70px;
+  background-size:50px 70px;
 }

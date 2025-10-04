@@ -6,7 +6,6 @@
   <title>Texas Hold'em Poker</title>
   <link rel="stylesheet" href="./css/style-page.css">
   <link rel="stylesheet" href="./css/style-poker.css">
-</head>
 
 <body>
 <div id="container">
@@ -42,23 +41,22 @@
   <div id="card-pool" style="background-color: antiquewhite;">
     <!-- 左上方总牌堆 -->
     <div class="header">
-      <div class="card" data-suit="hearts" data-value="K">
-        <div class="card-back"></div>
-        <div class="card-front">
-          <span class="number">K</span>
+      <div class="cards">
+        <div class="card-back">
+          <div>数量</div>
         </div>
       </div>
     </div>
 
     <!-- 右上方 我的手牌 -->
     <div class="my-card">
-      <div class="card" data-suit="hearts" data-value="K">
+      <div class="card" data-suit="" data-value="">
         <div class="card-back"></div>
         <div class="card-front">
           <span class="number">K</span>
         </div>
       </div>
-      <div class="card" data-suit="hearts" data-value="K">
+      <div class="card" data-suit="" data-value="">
         <div class="card-back"></div>
         <div class="card-front">
           <span class="number">K</span>
@@ -111,5 +109,6 @@
 
 </div>
 
+  <script src="./js/poker.js"></script>
 </body>
 </html>
