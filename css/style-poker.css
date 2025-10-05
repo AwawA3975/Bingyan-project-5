@@ -15,6 +15,14 @@
   align-items: center;
   position: relative; /* 相对定位但不影响外部布局 */
 }
+/* 使剩余牌堆的数字居中 */
+.cards div{
+  display: inline-flex;
+  /* align-self: center; */
+  justify-content: center;
+  align-items: center;
+}
+
 .card-front,.card-back{
   border-radius: 3px;
   backface-visibility: hidden;
@@ -27,13 +35,16 @@
   background: linear-gradient(135deg,rgb(225, 223, 223),55%,rgba(33, 33, 33, 0.99));
   transform:rotateY(0deg);
   z-index: 2; 
-  border: 1px dashed red;
+  /* border: 1px dashed red; */
 }
 .card-front{
   color: white;
   transform: rotateY(180deg); 
   z-index: 1; 
-  border: 1px dashed rgb(47, 0, 255); 
+  /* border: 1px dashed rgb(47, 0, 255);  */
+  display: flex; /* 使用flex布局内部元素 */
+  justify-content: center;
+  align-items: center;
 }
 
 .card.flipped .card-back {
@@ -43,34 +54,26 @@
   transform: rotateY(0deg); 
 }  /* 正面可见 */
 
-/* 背景 */
-.card-front::after{
-  content: '';
-  width: 100%;
-  height:100%;
-  background-image: inherit; 
-  opacity: 0.5; 
-  z-index: -1;
-}
-.card[data-suit='♦'].card-front{
+ /* 渲染背景 */
+.card[data-suit='♦']{
   background-image: url(../sources/diamond.png);
   background-position: center;
   background-repeat: no-repeat;
   background-size:50px 70px;
 }
-.card[data-suit='♥'].card-front{
+.card[data-suit='♥']{
   background-image: url(../sources/heart.png);
   background-position: center;
   background-repeat: no-repeat;
   background-size:50px 70px;
 }
-.card[data-suit='♠'].card-front{
+.card[data-suit='♠']{
   background-image: url(../sources/spade.png);
   background-position: center;
   background-repeat: no-repeat;
   background-size:50px 70px;
 }
-.card[data-suit='♣'].card-front{
+.card[data-suit='♣']{
   background-image: url(../sources/club.png);
   background-position: center;
   background-repeat: no-repeat;
