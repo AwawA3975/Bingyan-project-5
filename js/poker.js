@@ -122,29 +122,160 @@ function prejudging(arr){
 }
 prejudging(game.players[0].card)
 prejudging(game.state.communityCards)
-// console.log(allRanks);
-// console.log(allSuits);
+// console.log(allRanks)
+// console.log(allSuits)
 
+// 映射
 const mappedRanks = allRanks.map(x =>({ 'J':11, 'Q':12, 'K':13, 'A':14 }[x] || +x))
 mappedRanks.sort((a,b) => b - a);
-// console.log(mappedRanks);
+// console.log(mappedRanks)
 // 得到了降序排列的mappedRanks数组
 
-// 2)统计花色\牌面出现频率
-const rankCounts = {}
+// 2)统计花色\牌面出现频率\统计纯牌面值
+let rankCounts = {}
 mappedRanks.map(x => {
   rankCounts[x] = (rankCounts[x] || 0) + 1 
 })
-const suitCounts = {}
+let suitCounts = {}
 allSuits.map(x => {
   suitCounts[x] = (suitCounts[x] || 0) + 1 
 })
-// console.log(rankCounts)
-// console.log(suitCounts)
+let rankNumber = [...new Set(mappedRanks)]
+
+console.log(mappedRanks)
+console.log(rankNumber)
+console.log(rankCounts)
+console.log(suitCounts)
 
 // 2.胜负判断
 
+// // 试验牌型
+// rankNumber = [14,13,12,11,10]
+// rankCounts = {
+//   2: 2, 
+//   9: 3, 
+//   10: 2, 
+// }
+suitCounts = {
+  "♠": 5,
+  "♦": 2, 
+};
+// // 之后记得把它俩改回const！
+
+let rank
+
+// 1)顺子
+function judgingStraight(arr){
+  if(arr.length<5)
+    return false
+
+  const special = arr.every((rank) => [2,3,4,5,14].includes(rank))
+  if(special === true){
+    rank = 5
+    return true
+  }
+  let outcome = false
+  for(i=0;i<=arr.length-5;i++){
+    // console.log(`第${i}遍大循环`);
+    for(j=i;j<i+5;j++){
+      // console.log(`第${j}遍小循环`);
+      if(arr[j] !== arr[j+1]+1){
+        // console.log(`这大概不是顺子`);
+        break
+      }else if(j === i+3){
+        rank = arr[i]
+        outcome = true
+        break
+      }
+    }
+  }
+  return outcome
+}
+const ifStraight = judgingStraight(rankNumber)
+// console.log(ifStraight);
+// console.log(rank);
+
+
+// 2)同花
+let ifFlush = false
+for(let k in suitCounts){
+  if (suitCounts[k] >=5){
+    ifFlush = true
+  }
+}
+// console.log(ifFlush);
+
+// 3)同花顺
+// const ifStraightFlush = ifFlush && ifStraight
+// // console.log(ifStraightFlush);
+if(ifFlush){
+  
+}
 
 
 
 
+// 4)皇家同花顺
+const ifRoyalFlush = ifStraightFlush && rankNumber.every((rank) => [14,13,12,11,10].includes(rank))
+// console.log(ifRoyalFlush);
+
+// 5)四条
+let ifFourOfAKind = false
+for(let k in rankCounts){
+  if (rankCounts[k] === 4){
+    ifFourOfAKind = true
+  }
+}
+// console.log(ifFourOfAKind);
+
+// 6)葫芦
+let ifFullHouse = false
+for(let i in rankCounts){
+  if (rankCounts[i] === 3){
+    for(let j in rankCounts){
+      if (rankCounts[j] === 2 || rankCounts[j] === 3){
+        ifFullHouse = true
+      }
+    }
+  }
+}
+// console.log(ifFullHouse);
+
+// 7)三条
+let ifThreeOfAKind = false
+for(let i in rankCounts){
+  if (rankCounts[i] === 3){
+    ifFullHouse = true
+  }
+}
+// console.log(ifFullHouse);
+
+// 8)两对/一对
+let pair = 0
+for(let k in rankCounts){
+  if (rankCounts[k] === 2){
+    pair += 1
+  }
+}
+
+const ifTwoPair = '';
+const ifOnePair = pair === 1?true:false
+
+// console.log(ifOnePair);
+// console.log(ifTwoPair);
+
+function getHandLevel() {
+  if (ifRoyalFlush) return 10;
+  if (ifStraightFlush) return 9;
+  if (ifFourOfAKind) return 8;
+  if (ifFullHouse) return 7;
+  if (ifFlush) return 6;
+  if (ifStraight) return 5;
+  if (ifThreeOfAKind) return 4;
+  if (ifTwoPair) return 3;
+  if (ifOnePair) return 2;
+  return 1;
+}
+
+game.players[0].hand.level = getHandLevel();
+console.log(game.players[0].hand.level);
