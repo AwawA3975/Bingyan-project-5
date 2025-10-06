@@ -6,9 +6,8 @@ const game = {
     phase: 'preflop', /* 游戏阶段 */
     pot: 0,/* 赌池中全部赌注 */
     communityCards: [],
-    currentBet: 0,/* 当前赌注 */
     Button: 5,/* 庄家id */
-    dealerPosition: 2,/* 当前行动人 */
+    // dealerPosition: 2,/* 当前行动人 */
     smallBlind: 10,
     bigBlind: 20
   },
@@ -25,7 +24,6 @@ const game = {
       currentBet: 0,
       folded: false,
       allIn: false,
-      isActive: true
     },
     {
       id: 2,
@@ -37,7 +35,6 @@ const game = {
       currentBet: 0,
       folded: false,
       allIn: false,
-      isActive: true
     },
     {
       id: 3,
@@ -49,7 +46,6 @@ const game = {
       currentBet: 0,
       folded: false,
       allIn: false,
-      isActive: true
     },
     {
       id: 4,
@@ -61,7 +57,6 @@ const game = {
       currentBet: 0,
       folded: false,
       allIn: false,
-      isActive: true
     },
     {
       id: 5,
@@ -73,7 +68,6 @@ const game = {
       currentBet: 0,
       folded: false,
       allIn: false,
-      isActive: true
     },
     {
       id: 6,
@@ -85,7 +79,6 @@ const game = {
       currentBet: 0,
       folded: false,
       allIn: false,
-      isActive: true
     },
   ],
   
@@ -153,12 +146,10 @@ function dealOthersCard(arr){
 game.state.phase = 'preflop'
 dealCard(game.players[0].card)
 dealCard(game.players[0].card)
-dealOthersCard(game.players[1].card)
-dealOthersCard(game.players[1].card)
-dealOthersCard(game.players[2].card)
-dealOthersCard(game.players[2].card)
-// 之后做成循环
-
+for(let i = 1;i<game.players.length;i++){
+  dealOthersCard(game.players[i].card)
+  dealOthersCard(game.players[i].card)
+}
 // 2)自动下注
 for(i=0;i<game.players.length;i++){
   if(i <= game.players.length - 3 && game.players[i].id === game.state.Button){
@@ -178,30 +169,110 @@ for(i=0;i<game.players.length;i++){
   }
 }
 console.log(game.players);
-
 // 3)下注行动轮
 
 
 
+// 需要获得所有人的输入：actionType\bet
+// 存到game.player中！
+function bettingTime(){
+  let bettingComplete = false/* 该轮次是否完结 */
+  let currentBetPool = 0/* 该轮次赌池 */
+  let maxBet = 0/* 该轮次最高下注 */
+  let addedBet = 0/* 该轮次加注 */
+
+  while(!bettingComplete){
+    let i = game.state.Button +1
+    const player = game.players[i]
+
+    // 循环 行动轮
+    if(bet === 'allIn'){
+      player.allIn = true
+      currentBetPool += player.chips
+      maxBet = maxBet>player.chips ?maxBet:player.chips
+      addedBet = maxBet>player.chips ?addedBet:player.chips
+      player.currentBet = player.chips
+      player.chips = 0
+    }else if(game.state.phase === 'preflop' || currentBetPool !== 0){
+      switch(actionType){
+        case 'fold':
+          player.folded = true
+          break
+        case 'call':
+          player.currentBet = maxBet
+          currentBetPool += maxBet
+          player.chips -=player.currentBet
+          break
+        case 'raise':
+          /* 需补充：下注额必须至少是“maxBet + addedBet”​​。 */
+          player.currentBet = bet
+          maxBet = maxBet>bet? maxBet : bet
+          currentBetPool += bet
+          addedBet = bet - maxBet
+          player.chips -=player.currentBet
+          break
+      }
+    }else{
+      switch(actionType){
+        case 'check':
+          break
+        case 'bet':
+          /* 需补充下注大于等于大盲注 */
+          player.currentBet = bet
+          maxBet = maxBet>bet? maxBet : bet
+          currentBetPool += bet
+          addedBet = bet
+          player.chips -=player.currentBet
+          break
+      }
+    }
+    i++
+    if(i>=game.players.length) i = 0
+
+    // 结束判断
+    let completedNumber = 0
+    for(let i = 0;i<game.players.length;i++){
+      const player = game.players[i]
+      if(player.allIn || player.folded || player.currentBet === maxBet){
+        completedNumber +=1
+      }
+    }
+    if(completedNumber === game.players.length) bettingComplete = true
+
+  }
+
+  // 下注结束 处理数据
+  game.state.pot += currentBetPool
+  game.players.forEach(
+    function(player){
+      player.currentBet = 0
+    }
+  )
 
 
-// 每轮发牌：
+}
+
+
+// 2.flop
+game.state.phase = 'flop'
 dealCard(game.state.communityCards)
 dealCard(game.state.communityCards)
 dealCard(game.state.communityCards)
+
+// 3.turn
+game.state.phase = 'turn'
 dealCard(game.state.communityCards)
+
+// 4.river
+game.state.phase = 'river'
 dealCard(game.state.communityCards)
 
 
-// 四、胜负判断系统 结果存于game中
-// 之后记得做成循环
-judgingOnePlayer(game.players[0])
-judgingOnePlayer(game.players[1])
-judgingOnePlayer(game.players[2])
-// console.log(game.players[0])
-// console.log(game.players[1])
-// console.log(game.players[2])
-
+// 四、胜负判断系统 结果存于game.players中
+for(let i=0;i < game.players.length;i++){
+  judgingOnePlayer(game.players[i])
+}
+console.log(game.players);
 // 超大函数 传入players[i]后将其handLevel,handRank传回
 function judgingOnePlayer(Obj){
   // 1.预处理
