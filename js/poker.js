@@ -21,6 +21,7 @@ const game = {
       card: [],
       handLevel: 0,
       handRank : {},
+      actionType:'',
       currentBet: 0,
       folded: false,
       allIn: false,
@@ -32,6 +33,7 @@ const game = {
       card: [],
       handLevel: 0,
       handRank : {},
+      actionType:'',
       currentBet: 0,
       folded: false,
       allIn: false,
@@ -43,6 +45,7 @@ const game = {
       card: [],
       handLevel: 0,
       handRank : {},
+      actionType:'',
       currentBet: 0,
       folded: false,
       allIn: false,
@@ -54,6 +57,7 @@ const game = {
       card: [],
       handLevel: 0,
       handRank : {},
+      actionType:'',
       currentBet: 0,
       folded: false,
       allIn: false,
@@ -65,6 +69,7 @@ const game = {
       card: [],
       handLevel: 0,
       handRank : {},
+      actionType:'',
       currentBet: 0,
       folded: false,
       allIn: false,
@@ -76,17 +81,18 @@ const game = {
       card: [],
       handLevel: 0,
       handRank : {},
+      actionType:'',
       currentBet: 0,
       folded: false,
       allIn: false,
     },
   ],
   
-  // 历史记录
-  history: {
-    actions: [],
-    winners: []
-  }
+  // // 历史记录
+  // history: {
+  //   actions: [],
+  //   winners: []
+  // }
 };
 
 // 创建牌组 名为poker
@@ -141,6 +147,37 @@ function dealOthersCard(arr){
 // 二、赌注系统
 
 // 三、游戏流程
+
+range = document.getElementById('range')
+submit = document.getElementById('submit')
+buttons = document.querySelectorAll('.button')
+
+// const myChoice = []
+// let myBet = 0
+// buttons.forEach(button =>{
+//   button.addEventListener('click',function(){
+//     myChoice.unshift(this.id)
+//     // game.players[0].actionType = this.id
+//   })
+// })
+// if(myChoice[0] !== 'bet' && myChoice[0] !== 'raise'){
+//   range.style.display = 'none'
+// } else range.style.display = 'flex'
+// if(myChoice[0] === 'call'){
+//   myBet = 
+// }else myBet = range.valueAsNumber
+
+// // 记得增加一块显示玩家的选择和下注金额!
+
+// submit.addEventListener('click',function(){
+//   game.players[0].actionType = myChoice[0]
+//   game.players[0].currentBet = myBet
+//   buttons.forEach(button =>{
+//     button.disabled = true
+//   })
+//   range.style.display ='none'
+// })
+
 // 1.preflop
 // 1)发牌
 game.state.phase = 'preflop'
@@ -173,21 +210,46 @@ console.log(game.players);
 
 
 
-// 需要获得所有人的输入：actionType\bet
+// 需要获得所有人的输入(actionType\player.currentBet)后存入game.players
 // 存到game.player中！
+
 function bettingTime(){
   let bettingComplete = false/* 该轮次是否完结 */
   let currentBetPool = 0/* 该轮次赌池 */
   let maxBet = 0/* 该轮次最高下注 */
   let addedBet = 0/* 该轮次加注 */
-
+  // 下注循环
   while(!bettingComplete){
+    // const myChoice = []
+    // let myBet = 0
+    // buttons.forEach(button =>{
+    //   button.addEventListener('click',function(){
+    //     myChoice.unshift(this.id)
+    //     // game.players[0].actionType = this.id
+    //   })
+    // })
+    // if(myChoice[0] !== 'bet' && myChoice[0] !== 'raise'){
+    //   range.style.display = 'none'
+    // } else range.style.display = 'flex'
+    // if(myChoice[0] === 'call'){
+    //   myBet = 
+    // }else myBet = range.valueAsNumber
+
+    // // 记得增加一块显示玩家的选择和下注金额!
+
+    // submit.addEventListener('click',function(){
+    //   game.players[0].actionType = myChoice[0]
+    //   game.players[0].currentBet = myBet
+    //   buttons.forEach(button =>{
+    //     button.disabled = true
+    //   })
+    //   range.style.display ='none'
+    // })
+
     let i = game.state.Button +1
     const player = game.players[i]
-
     // 循环 行动轮
-    if(bet === 'allIn'){
-      player.allIn = true
+    if(player.allIn = true){
       currentBetPool += player.chips
       maxBet = maxBet>player.chips ?maxBet:player.chips
       addedBet = maxBet>player.chips ?addedBet:player.chips
@@ -205,10 +267,10 @@ function bettingTime(){
           break
         case 'raise':
           /* 需补充：下注额必须至少是“maxBet + addedBet”​​。 */
-          player.currentBet = bet
-          maxBet = maxBet>bet? maxBet : bet
-          currentBetPool += bet
-          addedBet = bet - maxBet
+          player.currentBet = player.currentBet
+          maxBet = maxBet>player.currentBet? maxBet : player.currentBet
+          currentBetPool += player.currentBet
+          addedBet = player.currentBet - maxBet
           player.chips -=player.currentBet
           break
       }
@@ -218,18 +280,17 @@ function bettingTime(){
           break
         case 'bet':
           /* 需补充下注大于等于大盲注 */
-          player.currentBet = bet
-          maxBet = maxBet>bet? maxBet : bet
-          currentBetPool += bet
-          addedBet = bet
+          player.currentBet = player.currentBet
+          maxBet = maxBet>player.currentBet? maxBet : player.currentBet
+          currentBetPool += player.currentBet
+          addedBet = player.currentBet
           player.chips -=player.currentBet
           break
       }
     }
     i++
     if(i>=game.players.length) i = 0
-
-    // 结束判断
+    // 下注轮结束判断
     let completedNumber = 0
     for(let i = 0;i<game.players.length;i++){
       const player = game.players[i]
@@ -238,9 +299,7 @@ function bettingTime(){
       }
     }
     if(completedNumber === game.players.length) bettingComplete = true
-
   }
-
   // 下注结束 处理数据
   game.state.pot += currentBetPool
   game.players.forEach(
@@ -248,8 +307,6 @@ function bettingTime(){
       player.currentBet = 0
     }
   )
-
-
 }
 
 
