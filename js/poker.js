@@ -3,11 +3,12 @@
 const game = {
   // 游戏全局状态
   state: {
-    phase: 'preflop', // 游戏阶段
+    phase: 'preflop', /* 游戏阶段 */
     pot: 0,/* 赌池中全部赌注 */
     communityCards: [],
     currentBet: 0,/* 当前赌注 */
-    // dealerPosition: 0,
+    Button: 5,/* 庄家id */
+    dealerPosition: 2,/* 当前行动人 */
     smallBlind: 10,
     bigBlind: 20
   },
@@ -23,7 +24,7 @@ const game = {
       handRank : {},
       currentBet: 0,
       folded: false,
-      // allIn: false,
+      allIn: false,
       isActive: true
     },
     {
@@ -35,7 +36,7 @@ const game = {
       handRank : {},
       currentBet: 0,
       folded: false,
-      // allIn: false,
+      allIn: false,
       isActive: true
     },
     {
@@ -47,7 +48,43 @@ const game = {
       handRank : {},
       currentBet: 0,
       folded: false,
-      // allIn: false,
+      allIn: false,
+      isActive: true
+    },
+    {
+      id: 4,
+      name: 'Player 4',
+      chips: 1000,
+      card: [],
+      handLevel: 0,
+      handRank : {},
+      currentBet: 0,
+      folded: false,
+      allIn: false,
+      isActive: true
+    },
+    {
+      id: 5,
+      name: 'Player 5',
+      chips: 1000,
+      card: [],
+      handLevel: 0,
+      handRank : {},
+      currentBet: 0,
+      folded: false,
+      allIn: false,
+      isActive: true
+    },
+    {
+      id: 6,
+      name: 'Player 6',
+      chips: 1000,
+      card: [],
+      handLevel: 0,
+      handRank : {},
+      currentBet: 0,
+      folded: false,
+      allIn: false,
       isActive: true
     },
   ],
@@ -110,15 +147,44 @@ function dealOthersCard(arr){
 
 // 二、赌注系统
 
-
 // 三、游戏流程
-// 发手牌
+// 1.preflop
+// 1)发牌
+game.state.phase = 'preflop'
 dealCard(game.players[0].card)
 dealCard(game.players[0].card)
 dealOthersCard(game.players[1].card)
 dealOthersCard(game.players[1].card)
 dealOthersCard(game.players[2].card)
 dealOthersCard(game.players[2].card)
+// 之后做成循环
+
+// 2)自动下注
+for(i=0;i<game.players.length;i++){
+  if(i <= game.players.length - 3 && game.players[i].id === game.state.Button){
+      game.players[i+1].currentBet = game.state.smallBlind
+      game.players[i+2].currentBet = game.state.bigBlind
+      break
+  }
+  if(i === game.players.length - 2 && game.players[i].id === game.state.Button){
+      game.players[i+1].currentBet = game.state.smallBlind
+      game.players[i+2-game.players.length].currentBet = game.state.bigBlind
+      break
+  }
+  if(i === game.players.length - 1 && game.players[i].id === game.state.Button){
+      game.players[i+1-game.players.length].currentBet = game.state.smallBlind
+      game.players[i+2-game.players.length].currentBet = game.state.bigBlind
+      break
+  }
+}
+console.log(game.players);
+
+// 3)下注行动轮
+
+
+
+
+
 // 每轮发牌：
 dealCard(game.state.communityCards)
 dealCard(game.state.communityCards)
@@ -128,6 +194,7 @@ dealCard(game.state.communityCards)
 
 
 // 四、胜负判断系统 结果存于game中
+// 之后记得做成循环
 judgingOnePlayer(game.players[0])
 judgingOnePlayer(game.players[1])
 judgingOnePlayer(game.players[2])
@@ -135,6 +202,7 @@ judgingOnePlayer(game.players[2])
 // console.log(game.players[1])
 // console.log(game.players[2])
 
+// 超大函数 传入players[i]后将其handLevel,handRank传回
 function judgingOnePlayer(Obj){
   // 1.预处理
   // 1)将花色、牌面提到单独数组并对牌面映射排序
@@ -328,5 +396,4 @@ function judgingOnePlayer(Obj){
   }
 }
 
-// judgingOnePlayer(game.players[0])
-// console.log(game.players[0]);
+
