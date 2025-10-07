@@ -95,20 +95,21 @@ const game = {
   // }
 };
 
-// 2.创建牌组 名为poker
+// 2.牌组准备
+// 1)创建牌组 名为poker
 const suits = ['♣','♠','♦','♥']
 const ranks = ['2','3','4','5','6','7','8','9','10','J','Q','K','A']
 let poker = []
+createPoker()
 function createPoker(){
   for(let suit in suits){
-    // console.log(suits[suit]);
     for(let rank in ranks){
       poker.push(suits[suit]+ranks[rank])
     }
   }
 }
-createPoker()
-// 3.洗牌 得到乱序数组poker
+// 2)洗牌 得到乱序数组poker
+shuffleCards(poker)
 function shuffleCards(arr){
   for(let i = arr.length-1; i>=0; i--){
     const j = Math.floor(Math.random()*(i+1))
@@ -117,9 +118,8 @@ function shuffleCards(arr){
     arr[i] = temp
   }
 }
-shuffleCards(poker)
-// 4.发牌函数
-// 1)给自己发牌 发单张牌使用函数dealCard()
+// 3)发牌函数
+// a)给自己发牌(渲染页面)
 let selectedCard =''
 function dealCard(arr){
   // 1.取出最后一张牌 存于变量selectedCard中
@@ -136,13 +136,89 @@ function dealCard(arr){
   arr.push(selectedCard)
   document.querySelector('.cards div div').innerHTML = poker.length
 }
-// 2)给他人发牌(不渲染页面)
+// b)给他人发牌(不渲染页面)
 function dealOthersCard(arr){
   arr.push(poker.pop())
   document.querySelector('.cards div div').innerHTML = poker.length
 }
-// 5.机器人们
 
+// 3.机器人们
+class PokerBot {
+  constructor(name){
+    this.name = name
+    this.aggression = 0.5+Math.random()*0.5
+  }
+  /* 输入手牌和已有公共牌，返回强度 */
+  evaluateCards(card,communityCards){
+    let strength = 0
+    // 分时期
+    if(communityCards.length === 0){
+      strength = judgingMyCards(card)
+    }else if(communityCards.length === 3){
+      strength = guessCardsStrength(card,communityCards)
+    }else if(communityCards.length === 4){
+      strength = guessCardsStrength(card,communityCards) * 0.9
+    }else{
+      strength = guessCardsStrength(card,communityCards) * 0.8
+    }
+    // 1)手牌阶段
+    function judgingMyCards(card){
+      /* 预处理 */
+      const myCards = [{},{}]
+      for(let i = 0;i<2;i++){
+        myCards[i].suit = card[i][0]
+        myCards[i].rank = card[i].substring(1)
+      }
+      myCards[0].rank = { 'J':11, 'Q':12, 'K':13, 'A':14 }[myCards[0].rank] || +myCards[0].rank
+      myCards[1].rank = { 'J':11, 'Q':12, 'K':13, 'A':14 }[myCards[1].rank] || +myCards[1].rank
+      const maxRank = Math.max(myCards[0].rank, myCards[1].rank);
+      const minRank = Math.min(myCards[0].rank, myCards[1].rank);
+      /* 权重判断 */
+      let strength = 0
+      if(myCards[0].rank === myCards[1].rank) {
+        if (myCards[0].rank >=14) strength = 1.00
+        else if (myCards[0].rank >=12) strength = 0.98
+        else if(myCards[0].rank === 11 || myCards[0].rank === 10) strength = 0.88
+        else strength = 0.55+0.03*myCards[0].rank
+      }else{
+        strength = (maxRank * 0.06) + (minRank * 0.02);
+        if (maxRank - minRank >= 10) strength *= 0.8;
+        else if (maxRank - minRank >= 5) strength *= 0.9;
+      }
+      /* 加成系数 */
+      if(myCards[0].suit === myCards[1].suit) strength *= 1.1
+      if([1,2,-1,-2].includes(myCards[0].rank - myCards[1].rank))  strength *= 1.07
+      else if([3,4,-3,-4].includes(myCards[0].rank - myCards[1].rank))  strength *= 1.03
+
+      return Math.min(strength, 1.0)
+    }
+    // 2)公共牌阶段 
+    function guessCardsStrength(card,communityCards){
+      /* 预处理 */
+      const workedPlayerCards = prejudgingCards(card,communityCards)
+      /* 权重判断 */
+      const outcome = judgingCards(workedPlayerCards)
+      const coefficient = {
+        10: 1.0,
+        9: 1.0,
+        8: 0.95,
+        7: 0.85,
+        6: 0.75,
+        5: 0.70,
+        4: 0.60,
+        3: 0.50,
+        2: 0.30,
+        1: 0.10 
+      };
+      if(communityCards.length === 3 || communityCards.length === 4){
+        if(outcome.handLevel === 1) return outcome.handRank['rankOne'] * coefficient[outcome.handLevel] +0.15
+      }return outcome.handRank['rankOne'] * coefficient[outcome.handLevel]
+    }
+    return Math.min(strength, 1.0)
+  }
+  /* 根据手牌强度返回行为 */
+
+}
 
 
 // 二、下注轮函数
@@ -155,9 +231,9 @@ function bettingTime(){
   let maxBet = 0/* 该轮次最高下注 */
   let addedBet = 0/* 该轮次加注 */
   // 下注循环
-  let i = game.state.Button +1
-  const player = game.players[i]
   while(!bettingComplete){
+    let i = game.state.Button +1
+    const player = game.players[i]
     // 1.获得玩家行动
     function getMyAction(){
       // 状态判断：非preflop轮且currentBetPool=0时仅check和bet可用；
@@ -337,38 +413,49 @@ for(i=0;i<game.players.length;i++){
 }
 console.log(game.players);
 // 3)下注行动轮
-bettingTime()
+// bettingTime()
 
 // 2.flop
 game.state.phase = 'flop'
 dealCard(game.state.communityCards)
 dealCard(game.state.communityCards)
 dealCard(game.state.communityCards)
-bettingTime()
+// bettingTime()
 
 // 3.turn
 game.state.phase = 'turn'
 dealCard(game.state.communityCards)
-bettingTime()
+// bettingTime()
 
 // 4.river
 game.state.phase = 'river'
 dealCard(game.state.communityCards)
-bettingTime()
+// bettingTime()
 
 // 5.showdown
 for(let i=0;i < game.players.length;i++){
-  judgingOnePlayer(game.players[i])
+  const outcome = judgingOnePlayer(game.players[i].card,game.state.communityCards)
+  game.players[i].handLevel = outcome.handLevel
+  game.players[i].handRank = outcome.handRank
 }
 /* 待添加：比较手牌+胜负判断+结算页面+再来一局/破产清算 */
-
-
-// 四、胜负判断函数 结果存于game.players中
 console.log(game.players);
-// 超大函数 传入players[i]后将其handLevel,handRank传回
-function judgingOnePlayer(Obj){
+
+
+// 函数
+// 判断牌型牌面(包含预处理部分)  就是下面两个加起来
+/* 输入未处理过的分开两个数组 */
+function judgingOnePlayer(card,communityCards){
   // 1.预处理
-  // 1)将花色、牌面提到单独数组并对牌面映射排序
+  const workedPlayerCards = prejudgingCards(card,communityCards)
+  // console.log(workedPlayerCards);
+  // 2.牌型牌面判断
+  const Obj = judgingCards(workedPlayerCards)
+  return Obj
+}
+// 预处理牌面函数
+/* 输入两个数组，得到处理好的对象（含四种形式） */
+function prejudgingCards(card,communityCards){
   const allRanks = []
   const allSuits = []
   function prejudging(arr){
@@ -377,8 +464,8 @@ function judgingOnePlayer(Obj){
       allRanks.push(arr[i].substring(1))
     }
   }
-  prejudging(Obj.card)
-  prejudging(game.state.communityCards)
+  prejudging(card)
+  prejudging(communityCards)
   // 映射
   const mappedRanks = allRanks.map(x =>({ 'J':11, 'Q':12, 'K':13, 'A':14 }[x] || +x))
   // 1.5) 将牌面对应存储到allCards中
@@ -402,10 +489,18 @@ function judgingOnePlayer(Obj){
     suitCounts[x] = (suitCounts[x] || 0) + 1 
   })
   let removedRanks = [...new Set(descendingRanks)]
-
-  // 2.牌型牌面判断
+  // 1.储存所有牌面信息的对象allCards
+  // 2.统计牌面频率的对象rankCounts;统计花色频率的对象suitCounts
+  // 3.去重且降序排列的牌面数值数组removedRanks
+  return [allCards,rankCounts,suitCounts,removedRanks]
+}
+// 判断牌型牌面(不包含预处理部分)
+/* 输入处理过的数组，返回包含handLevel和handRank判断的对象 */
+function judgingCards(workedPlayerCards){
+  const Obj = {}
   // 1)顺子
   let rank = 0
+  const ifStraight = judgingStraight(workedPlayerCards[3])
   function judgingStraight(arr){
     if(arr.length<5)
       return false
@@ -428,12 +523,11 @@ function judgingOnePlayer(Obj){
     }
     return outcome
   }
-  const ifStraight = judgingStraight(removedRanks)
   // 2)同花
   let ifFlush = false
   let flushSuit = ''
-  for(let k in suitCounts){
-    if (suitCounts[k] >=5){
+  for(let k in workedPlayerCards[2]){
+    if (workedPlayerCards[2][k] >=5){
       ifFlush = true
       flushSuit = k
     }
@@ -441,9 +535,9 @@ function judgingOnePlayer(Obj){
   // 2.5)处理牌面以便于比较
   // a.在同花的基础上取出同花的五张牌的牌面
   const flushRanks = []
-  for(i=0;i<allCards.length;i++){
-    if(allCards[i]['suit'] === flushSuit){
-      flushRanks.push(allCards[i]['rank'])
+  for(i=0;i<workedPlayerCards[0].length;i++){
+    if(workedPlayerCards[0][i]['suit'] === flushSuit){
+      flushRanks.push(workedPlayerCards[0][i]['rank'])
     }
   }
   // b.映射牌面+降序
@@ -459,34 +553,34 @@ function judgingOnePlayer(Obj){
   // 5)四条
   let ifFourOfAKind = false
   const fourRank = []
-  for(let k in rankCounts){
-    if (rankCounts[k] === 4){
+  for(let k in workedPlayerCards[1]){
+    if (workedPlayerCards[1][k] === 4){
       ifFourOfAKind = true
       fourRank.push(+k)
     }
   }
-  const leftedFourRank = removedRanks.filter(item => !fourRank.includes(item)) 
+  const leftedFourRank = workedPlayerCards[3].filter(item => !fourRank.includes(item)) 
   // 6)葫芦放到后面判断
   // 7)三条
   let ifThreeOfAKind = false
   let threeRank = []
-  for(let k in rankCounts){
-    if (rankCounts[k] === 3){
+  for(let k in workedPlayerCards[1]){
+    if (workedPlayerCards[1][k] === 3){
       ifThreeOfAKind = true
       threeRank.push(+k)
     }
   }
-  const leftedThreeRank = removedRanks.filter(item => !threeRank.includes(item)) 
+  const leftedThreeRank = workedPlayerCards[3].filter(item => !threeRank.includes(item)) 
   // 8)两对/一对
   let pairRank = []
   let pair = 0
-  for(let k in rankCounts){
-    if (rankCounts[k] === 2){
+  for(let k in workedPlayerCards[1]){
+    if (workedPlayerCards[1][k] === 2){
       pair += 1
       pairRank.push(+k)
     }
   }
-  const leftedPairRank = removedRanks.filter(item => !pairRank.includes(item)) 
+  const leftedPairRank = workedPlayerCards[3].filter(item => !pairRank.includes(item)) 
   pairRank = pairRank.sort((a, b) => b - a);
   const ifTwoPair = pair>=2 ? true : false
   const ifOnePair = pair === 1 ? true : false
@@ -550,13 +644,12 @@ function judgingOnePlayer(Obj){
       rankFive:leftedPairRank[3]
     };
     return {
-      rankOne:removedRanks[0],
-      rankTwo:removedRanks[1],
-      rankThree:removedRanks[2],
-      rankFour:removedRanks[3],
-      rankFive:removedRanks[4]
+      rankOne:workedPlayerCards[3][0],
+      rankTwo:workedPlayerCards[3][1],
+      rankThree:workedPlayerCards[3][2],
+      rankFour:workedPlayerCards[3][3],
+      rankFive:workedPlayerCards[3][4]
     };
   }
+  return Obj
 }
-
-
