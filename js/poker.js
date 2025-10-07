@@ -217,7 +217,39 @@ class PokerBot {
     return Math.min(strength, 1.0)
   }
   /* 根据手牌强度返回行为 */
+  /* 返回一个包含行为和赌金的对象，之后再赋值到game.players中 */
+  decideAction(handStrength){
+    const randomFactor = (Math.random() * 0.2) - 0.1;
+    let adjustedStrength = handStrength * this.aggression + randomFactor
+    adjustedStrength = Math.max(0, Math.min(1, adjusted))
 
+    /* 判断行为 */
+    if(game.state.phase === 'preflop' || currentBetPool !== 0){
+      if(adjustedStrength >= 0.8)  return {actionType: 'raise', currentBet: this.calculateRaiseAmount(adjustedStrength),folded:false,allIn:false}
+      else if(adjustedStrength >= 0.5){
+        /* 记得根据流程把这里的 game.players[0].chips换掉！*/
+          if(game.players[0].chips <= maxBet) return {actionType:'call',currentBet:game.players[0].chips , folded:false , allIn:true}
+          else return { actionType:'call',currentBet : maxBet,folded:false,allIn:false}
+      }else return { actionType:'fold',currentBet:0,folded:true,allIn:false}
+    }else{
+      if(adjustedStrength >= 0.6)return {actionType:'bet', currentBet: this.calculateBetAmount(adjustedStrength),folded:false,allIn:false}
+      else return{actionType:'check',currentBet:0,folded:false,allIn:false}
+    }
+
+  }
+  /* 判断赌金 */
+  calculateRaiseAmount(adjustedStrength){
+    const min = maxBet + addedBet
+    const coefficient = 0.2 + 0.6*adjustedStrength
+    const raiseAmount = game.state.pot * coefficient
+    return Math.max(min, raiseAmount)
+  }
+  calculateBetAmount(adjustedStrength){
+    const min = game.state.bigBlind
+    const coefficient = 0.2 + 0.6*adjustedStrength
+    const raiseAmount = game.state.pot * coefficient
+    return Math.max(min, raiseAmount)
+  }
 }
 
 
@@ -383,6 +415,12 @@ fold = document.getElementById('fold')
 range = document.getElementById('range')
 submit = document.getElementById('submit')
 buttons = document.querySelectorAll('.button')
+
+const robot1 = new PokerBot(robot1)
+const robot2 = new PokerBot(robot2)
+const robot3 = new PokerBot(robot3)
+const robot4 = new PokerBot(robot4)
+const robot5 = new PokerBot(robot5)
 
 // 1.preflop
 // 1)发牌
