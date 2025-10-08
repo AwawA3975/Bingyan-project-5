@@ -8,111 +8,109 @@
   <link rel="stylesheet" href="./css/style-poker.css">
 
 <body>
-<div id="container">
-  <!-- 左侧玩家/筹码 -->
-  <div id="players">
-    <div class="one-player me">
-      <div class="profile-photo"><img src="./sources/头像/1.png" alt="me"></div>
-      <div class="personal-bet"><span>筹码</span></div>
+  <div id="container">
+    <!-- 左侧玩家/筹码 -->
+    <div id="players">
+      <div class="one-player me">
+        <div class="profile-photo"><img src="./sources/头像/1.png" alt="Me"></div>
+        <div class="personal-bet"><span id="betOfThisTurn_1">筹码</span></div>
+      </div>
+      <div class="one-player">
+        <div class="profile-photo"><img src="./sources/头像/2.png" alt="Player 2"></div>
+        <div class="personal-bet"><span id="betOfThisTurn_2">筹码</span></div>
+      </div>
+      <div class="one-player">
+        <div class="profile-photo"><img src="./sources/头像/3.png" alt="Player 3"></div>
+        <div class="personal-bet"><span id="betOfThisTurn_3">筹码</span></div>
+      </div>
+      <div class="one-player">
+        <div class="profile-photo"><img src="./sources/头像/2.png" alt="Player 4"></div>
+        <div class="personal-bet"><span id="betOfThisTurn_4">筹码</span></div>
+      </div>
+      <div class="one-player">
+        <div class="profile-photo"><img src="./sources/头像/1.png" alt="Player 5"></div>
+        <div class="personal-bet"><span id="betOfThisTurn_5">筹码</span></div>
+      </div>
+      <div class="one-player">
+        <div class="profile-photo"><img src="./sources/头像/1.png" alt="Player 6"></div>
+        <div class="personal-bet"><span id="betOfThisTurn_6">筹码</span></div>
+      </div>
+      
+      <div class="bet-pool" id="betPool">
+        筹码池
+      </div>
     </div>
-    <div class="one-player">
-      <div class="profile-photo"><img src="./sources/头像/2.png" alt="player-1"></div>
-      <div class="personal-bet"><span>筹码</span></div>
+    <!-- 右侧上方牌池 -->
+    <div id="card-pool" style="background-color: antiquewhite;">
+      <!-- 左上方总牌堆 -->
+      <div class="header">
+        <div class="cards">
+          <div class="card-back">
+            <div>数量</div>
+          </div>
+        </div>
+      </div>
+      <!-- 右上方 我的手牌 -->
+      <div class="my-card">
+        <div class="card" data-suit="" data-rank="">
+          <div class="card-back"></div>
+          <div class="card-front">
+            <span class="number"></span>
+          </div>
+        </div>
+        <div class="card" data-suit="" data-rank="">
+          <div class="card-back"></div>
+          <div class="card-front">
+            <span class="number"></span>
+          </div>
+        </div>
+      </div>
+      <!-- 中间 五张牌 -->
+      <div class="pool">
+        <div class="card" data-suit="" data-rank="">
+          <div class="card-back"></div>
+          <div class="card-front">
+            <span class="number"></span>
+          </div>
+        </div>
+        <div class="card" data-suit="" data-rank="">
+          <div class="card-back"></div>
+          <div class="card-front">
+            <span class="number"></span>
+          </div>
+        </div>
+        <div class="card" data-suit="" data-rank="">
+          <div class="card-back"></div>
+          <div class="card-front">
+            <span class="number"></span>
+          </div>
+        </div>
+        <div class="card" data-suit="" data-rank="">
+          <div class="card-back"></div>
+          <div class="card-front">
+            <span class="number"></span>
+          </div>
+        </div>
+        <div class="card" data-suit="" data-rank="">
+          <div class="card-back"></div>
+          <div class="card-front">
+            <span class="number"></span>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="one-player">
-      <div class="profile-photo"><img src="./sources/头像/3.png" alt="player-2"></div>
-      <div class="personal-bet"><span>筹码</span></div>
-    </div>
-    <div class="one-player">
-      <div class="profile-photo"><img src="./sources/头像/2.png" alt="player-3"></div>
-      <div class="personal-bet"><span>筹码</span></div>
-    </div>
-    <div class="one-player">
-      <div class="profile-photo"><img src="./sources/头像/1.png" alt="player-4"></div>
-      <div class="personal-bet"><span>筹码</span></div>
-    </div>
-    
-    <div class="bet-pool">
-      筹码池
+    <!-- 下方按钮区  my-behaviour-->
+    <div id="my-behaviour" style="background-color: rgba(202, 223, 14, 0.449);">
+      <button type="button" class="button" id="check" >Check</button>
+      <button type="button" class="button" id="bet">Bet</button>
+      <button type="button" class="button" id="call">Call</button>
+      <button type="button" class="button" id="raise">Raise</button>
+      <button type="button" class="button" id="fold">Fold</button>
+      <input type="range" id="range" step="10" style="display:none;">
+        <span id="rangeValue"></span>
+      <button type="button" id="submit" disabled=true>submit</button>
     </div>
   </div>
-
-  <!-- 右侧上方牌池 -->
-  <div id="card-pool" style="background-color: antiquewhite;">
-    <!-- 左上方总牌堆 -->
-    <div class="header">
-      <div class="cards">
-        <div class="card-back">
-          <div>数量</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 右上方 我的手牌 -->
-    <div class="my-card">
-      <div class="card" data-suit="" data-rank="">
-        <div class="card-back"></div>
-        <div class="card-front">
-          <span class="number"></span>
-        </div>
-      </div>
-      <div class="card" data-suit="" data-rank="">
-        <div class="card-back"></div>
-        <div class="card-front">
-          <span class="number"></span>
-        </div>
-      </div>
-    </div>
-
-    <!-- 中间 五张牌 -->
-    <div class="pool">
-      <div class="card" data-suit="" data-rank="">
-        <div class="card-back"></div>
-        <div class="card-front">
-          <span class="number"></span>
-        </div>
-      </div>
-      <div class="card" data-suit="" data-rank="">
-        <div class="card-back"></div>
-        <div class="card-front">
-          <span class="number"></span>
-        </div>
-      </div>
-      <div class="card" data-suit="" data-rank="">
-        <div class="card-back"></div>
-        <div class="card-front">
-          <span class="number"></span>
-        </div>
-      </div>
-      <div class="card" data-suit="" data-rank="">
-        <div class="card-back"></div>
-        <div class="card-front">
-          <span class="number"></span>
-        </div>
-      </div>
-      <div class="card" data-suit="" data-rank="">
-        <div class="card-back"></div>
-        <div class="card-front">
-          <span class="number"></span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 下方按钮区  my-behaviour-->
-  <div id="my-behaviour" style="background-color: rgba(202, 223, 14, 0.449);">
-    <button type="button" class="button" id="check" disabled=true>Check</button>
-    <button type="button" class="button" id="bet" disabled=true>Bet</button>
-    <button type="button" class="button" id="call">Call</button>
-    <button type="button" class="button" id="raise">Raise</button>
-    <button type="button" class="button" id="fold">Fold</button>
-    <input type="range" id="range" style="display:none;">
-    <button type="button" id="submit" disabled=true>submit</button>
-  </div>
-
-</div>
-
   <script src="./js/poker.js"></script>
-
 </body>
 </html>

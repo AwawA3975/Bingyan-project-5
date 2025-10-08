@@ -19,14 +19,14 @@ const game = {
   players: [
     {
       id: 1,
-      name: 'Player 1',
+      name: 'Me',
       chips: 1000,
       card: [],
       handLevel: 0,
       handRank : {},
       actionType:'',
-      currentBet: 0,
-      betOfThisTurn:0,
+      currentBet: 0,/* 这一轮 */
+      betOfThisTurn:0,/* 总共的 */
       folded: false,
       allIn: false,
     },
@@ -240,15 +240,15 @@ class PokerBot {
     console.log(`决策参数: strength=${handStrength}, adjusted=${adjustedStrength}, chips=${this.chips}`)
     /* 判断行为 */
     if(game.state.phase === 'preflop' || pool() !== 0){
-      if(adjustedStrength >= 0.8)  action = {actionType: 'raise', currentBet: this.calculateRaiseAmount(adjustedStrength),folded:false,allIn:false}
-      else if(adjustedStrength >= 0.5){
+      if(adjustedStrength >= 0.8)  action = {actionType: 'raise', currentBet: this.calculateRaiseAmount(adjustedStrength),allIn:false}
+      else if(adjustedStrength >= 0.35){
         /* 记得根据流程把这里的 game.players[0].chips换掉！*/
-          if(this.chips <= maxBet()) action = {actionType:'call',currentBet:game.players[0].chips , folded:false , allIn:true}
-          else action = { actionType:'call',currentBet : maxBet(),folded:false,allIn:false}
-      }else action = { actionType:'fold',currentBet:0,folded:true,allIn:false}
+          if(this.chips <= maxBet()) action = {actionType:'call',currentBet:game.players[0].chips,allIn:true}
+          else action = { actionType:'call',currentBet : maxBet(),allIn:false}
+      }else action = { actionType:'fold',currentBet:0,allIn:false}
     }else{
-      if(adjustedStrength >= 0.6)action = {actionType:'bet', currentBet: this.calculateBetAmount(adjustedStrength),folded:false,allIn:false}
-      else action ={actionType:'check',currentBet:0,folded:false,allIn:false}
+      if(adjustedStrength >= 0.6)action = {actionType:'bet', currentBet: this.calculateBetAmount(adjustedStrength),allIn:false}
+      else action ={actionType:'check',currentBet:0,allIn:false}
     }
     console.log(action)
     return action
@@ -258,13 +258,13 @@ class PokerBot {
     const min = maxBet() + addedBet()
     const coefficient = 0.2 + 0.6*adjustedStrength
     const raiseAmount = game.state.pot * coefficient
-    return Math.max(min, raiseAmount)
+    return Math.max(min, Math.round(raiseAmount / 10) * 10)
   }
   calculateBetAmount(adjustedStrength){
     const min = game.state.bigBlind
     const coefficient = 0.2 + 0.6*adjustedStrength
     const raiseAmount = game.state.pot * coefficient
-    return Math.max(min, raiseAmount)
+    return Math.max(min, Math.round(raiseAmount / 10) * 10)
   }
 }
 
@@ -275,9 +275,11 @@ class PokerBot {
 // 存到game.player中！
 async function bettingTime(){
   let bettingComplete = false/* 该轮次是否完结 */
-  pool(0)
-  maxBet(0)/* 该轮次最高下注 */
-  addedBet(0)/* 该轮次加注 */
+  if(game.state.phase !== 'preflop'){
+    pool(0)
+    maxBet(0)/* 该轮次最高下注 */
+    addedBet(0)/* 该轮次加注 */
+  }
   
   let Index = game.state.Button 
   if(Index>=game.players.length) Index = 0
@@ -289,73 +291,68 @@ async function bettingTime(){
     console.log(Index);
     console.log(player);
     
+    /* 跳过已经allIn和fold的人  */
+    if(player.chips !== 0 && player.folded !== true) {
+      // 1.获得行动
+      if(Index === 0)  await getMyAction()     
+      else  await getBotAction(player.card,game.state.communityCards)
+      console.log(player);
     
-    // 1.获得行动
-    if(Index === 0)  await getMyAction()     
-    else  await getBotAction(player.card,game.state.communityCards)
-    console.log(player);
-  
-    // 2.循环 行动轮
-    // chip重新计算放到下面循环中
-    if(player.chips === 0 || player.folded === true) continue /* 跳过已经allIn和fold的人  */
-    if(player.allIn === true){
-      pool(pool() + player.chips)
-      maxBet(maxBet()>player.chips ?maxBet():player.chips)
-      addedBet(maxBet()>player.chips ?addedBet():player.chips)
-      player.chips = 0
-    }else if(game.state.phase === 'preflop' || pool() !== 0){
-      switch(player.actionType){
-        case 'blind':
-          pool(pool()+player.currentBet)
-          maxBet(game.state.bigBlind)
-          addedBet(game.state.bigBlind)
-          break
-          case 'fold':
-          player.folded = true
-          break
-          case 'call':
-            // player.currentBet = maxBet()
-          pool(pool() + maxBet())
-          player.chips -=player.currentBet
-          break
-          case 'raise':
-            /* 需补充：下注额必须至少是“maxBet() + addedBet()”​​。 */
-          // player.currentBet = player.currentBet
-          // maxBet = maxBet>player.currentBet? maxBet : player.currentBet
-          addedBet(player.currentBet - maxBet())
-          maxBet(player.currentBet)
-          pool(pool()+player.currentBet)
-          player.chips -=player.currentBet
-          break
-        }
-    }else{
-      switch(player.actionType){
-        case 'check':
-          break
-      case 'bet':
-        /* 需补充下注大于等于大盲注 */
-        // player.currentBet = player.currentBet
-        addedBet(player.currentBet)
-        maxBet(player.currentBet)
-        pool(pool()+player.currentBet)
-        player.chips -=player.currentBet
-        break
+      // 2.循环 行动轮
+      // chip重新计算放到下面循环中
+      if(player.allIn === true){
+        pool(pool() + player.chips)
+        maxBet(maxBet()>player.chips ?maxBet():player.chips)
+        addedBet(maxBet()>player.chips ?addedBet():player.chips)
+        player.chips = 0
+      }else if(game.state.phase === 'preflop' || pool() !== 0){
+        switch(player.actionType){
+          case 'blind':
+            pool(pool()+player.currentBet)
+            maxBet(game.state.bigBlind)
+            addedBet(game.state.bigBlind)
+            break
+            case 'fold':
+            player.folded = true
+            break
+            case 'call':
+              // player.currentBet = maxBet()
+            pool(pool() + maxBet())
+            player.chips -=player.currentBet
+            break
+            case 'raise':
+              /* 需补充：下注额必须至少是“maxBet() + addedBet()”​​。 */
+            // player.currentBet = player.currentBet
+            // maxBet = maxBet>player.currentBet? maxBet : player.currentBet
+            addedBet(player.currentBet - maxBet())
+            maxBet(player.currentBet)
+            pool(pool()+player.currentBet)
+            player.chips -=player.currentBet
+            break
+          }
+      }else{
+        switch(player.actionType){
+          case 'check':
+            break
+          case 'bet':
+            /* 需补充下注大于等于大盲注 */
+            // player.currentBet = player.currentBet
+            addedBet(player.currentBet)
+            maxBet(player.currentBet)
+            pool(pool()+player.currentBet)
+            player.chips -=player.currentBet
+            break
+          }
       }
     }
     Index++
     if(Index>=game.players.length) Index = 0
     console.log(Index);
-    
-    // // 下注轮结束判断
-    // let completedNumber = 0
-    // for(let i = 0;i<game.players.length;i++){
-    //   const player = game.players[i]
-    //   if(player.allIn || player.folded || player.currentBet === maxBet()){
-    //     completedNumber ++
-    //   }
-    // }
-    // if(completedNumber === game.players.length) bettingComplete = true
-    // console.log(completedNumber);
+    /* 更新筹码状态 */
+    for(let i = 0;i<game.players.length;i++){
+      document.getElementById(`betOfThisTurn_${i+1}`).innerHTML = game.players[i].betOfThisTurn + game.players[i].currentBet
+    }
+    document.getElementById('betPool').innerHTML = game.state.pot + pool()
 
     // 下注轮结束判断
     let completedNumber = 0;
@@ -396,52 +393,53 @@ async function bettingTime(){
           call.disabled = canCheck;
           raise.disabled = canCheck;
           fold.disabled = canCheck;
-          
-          // 设置raise的最小值
-          if(!raise.disabled) {
-            range.min = maxBet() + addedBet();
-            range.max = player.chips;
-          }
-          if(!bet.disabled) {
-            range.min = bigBlind;
-            range.max = player.chips;
-          }
         }
-
         // // 前一名玩家行动完后玩家方可提交自己该轮次行为
         // if(game.players[game.players.length-1].allIn || game.players[game.players.length-1].folded || game.players[game.players.length-1].currentBet === maxBet){
         //   submit.disabled = false
         // }
         // 获取玩家该轮次行为
-        const myChoice = []
-        let myBet = 0
         let whetherAllIn = false
-
-        buttons.forEach(button =>{
-          button.addEventListener('click',function(){
-            myChoice.unshift(this.id)
-          })/* 获得行为 */
-        })
-        if(myChoice[0] !== 'bet' && myChoice[0] !== 'raise'){
-          range.style.display = 'none'
-        } else range.style.display = 'flex'
-        
-        if(myChoice[0] === 'call'){
-          myBet = maxBet()
-          if(game.players[0].chips <= maxBet()){
-            myBet = game.players[0].chips
-            whetherAllIn = true
-          }
-        }else if(myChoice[0] === 'bet' || myChoice[0] === 'raise'){
-          myBet = range.valueAsNumber
-          if(myBet === game.players[0].chips) whetherAllIn = true
-        }else myBet = 0/* 获得赌金 (allIn特殊状态）*/ 
+        switch(myChoice){
+          case 'call':
+            myBet = maxBet()
+            if(game.players[0].chips <= maxBet()){
+              myBet = game.players[0].chips
+              whetherAllIn = true
+            }
+            break
+          case 'raise':
+            range.style.display = 'flex'
+            range.min = (maxBet() + addedBet()) < game.players[0].chips ? maxBet() + addedBet() : game.players[0].chips
+            range.max = game.players[0].chips
+            myBet = range.valueAsNumber
+            if(myBet === game.players[0].chips) whetherAllIn = true
+            break
+          case 'bet':
+            range.style.display = 'flex'
+            range.min = game.state.bigBlind < game.players[0].chips ? game.state.bigBlind : game.players[0].chips
+            range.max = player.chips
+            myBet = range.valueAsNumber
+            if(myBet === game.players[0].chips) whetherAllIn = true
+            break
+          case 'check':
+            myBet = 0
+            break
+          case 'fold':
+            myBet = 0
+            break
+        }
         // 记得增加一块显示玩家的选择和下注金额!
+        console.log(myChoice);
+        console.log(myBet);
+        
         // 点击submit 将行为和赌金传入game.player[0]/改变按钮状态
         submit.addEventListener('click',function(){
-          game.players[0].actionType = myChoice[0]
-          game.players[0].currentBet = myBet
+          if(!myChoice) return
+          game.players[0].actionType = myChoice
+          game.players[0].currentBet = Math.round(myBet / 10) * 10
           game.players[0].allIn = whetherAllIn
+
           buttons.forEach(button => button.disabled = true)
           submit.disabled = true
           range.style.display ='none'
@@ -453,14 +451,13 @@ async function bettingTime(){
     // 2.获得机器人行动
     function getBotAction(card,communityCards){
       return new Promise((resolve) => {
-        const bot = bots[Index]
+        const bot = bots[Index - 1]
         const delay = 2500 + Math.random() * 2000
         setTimeout(() => {
-          const strength = bot.evaluateCards(player.card,game.state.communityCards)
+          const strength = bot.evaluateCards(card,communityCards)
           const action = bot.decideAction(strength)
           player.actionType = action.actionType
           player.currentBet = action.currentBet
-          player.folded = action.folded
           player.allIn = action.allIn
           console.log(`已经获得了机器人行动`);
           
@@ -482,15 +479,7 @@ async function bettingTime(){
 }
 
 // 三、游戏流程
-check = document.getElementById('check')
-bet = document.getElementById('bet')
-call = document.getElementById('call')
-raise = document.getElementById('raise')
-fold = document.getElementById('fold')
-range = document.getElementById('range')
-submit = document.getElementById('submit')
-buttons = document.querySelectorAll('.button')
-
+/* 配置机器人 */
 const bots = []
 for(let i = 1;i < game.players.length;i++){
   const robot = new PokerBot(`robot${i}`,game.players[i].chips)
@@ -498,6 +487,42 @@ for(let i = 1;i < game.players.length;i++){
   bots.push(robot)
 }
 console.log(bots);
+/* 获取操作区元素+滑块更新+按钮变化 */
+const check = document.getElementById('check')
+const bet = document.getElementById('bet')
+const call = document.getElementById('call')
+const raise = document.getElementById('raise')
+const fold = document.getElementById('fold')
+const range = document.getElementById('range')
+const submit = document.getElementById('submit')
+const buttons = document.querySelectorAll('.button')
+const rangeValue = document.getElementById('rangeValue')
+range.addEventListener('input', function() {
+    const value = Math.round(this.valueAsNumber/ 10) * 10
+    rangeValue.textContent = value; // 更新显示
+    this.value = value; // 确保滑块停在10的倍数上
+})
+let myChoice = ''
+let myBet = 0
+buttons.forEach(button => {
+  button.addEventListener('click', () => {
+    myChoice = button.id;
+    submit.disabled = false; // 允许提交
+    if (myChoice === 'bet' || myChoice === 'raise') {
+      range.style.display = 'flex';
+      rangeValue.style.display = 'flex';
+    } else {
+      range.style.display = 'none';
+      rangeValue.style.display = 'none';
+    }
+  })
+})
+/* 左侧筹码及筹码池显示变化 */
+// console.log(document.getElementById('betOfThisTurn_1'));
+// for(let i = 0;i<game.players.length;i++){
+//   document.getElementById(`betOfThisTurn_${i+1}`).innerHTML = game.players[i].betOfThisTurn + game.players[i].currentBet
+// }
+// document.getElementById('betPool').innerHTML = game.state.pot + pool()
 
 
 runGame()
@@ -541,6 +566,10 @@ async function runGame(){
       addedBet(game.state.bigBlind)
     }
   }
+  console.log(pool());
+  console.log(maxBet());
+  console.log(addedBet());
+  
   console.log(game.players);
   // 3)下注行动轮
   await bettingTime()
@@ -567,6 +596,42 @@ async function runGame(){
     const outcome = judgingOnePlayer(game.players[i].card,game.state.communityCards)
     game.players[i].handLevel = outcome.handLevel
     game.players[i].handRank = outcome.handRank
+  }
+  
+  /* 判断赢家 */
+  const winnerId  = 0
+  let biggestHandLevel = 0
+  let biggestHandRank = {
+    rankOne:0,
+    rankTwo:0,
+    rankThree:0,
+    rankFour:0,
+    rankFive:0,
+  }
+  game.players.forEach(
+    function(player){
+      if(player.handLevel > biggestHandLevel) fn()
+      else if(player.handLevel === biggestHandLevel){
+        if(player.handRank.rankOne > biggestHandRank.rankOne) fn()
+          else if(player.handRank.rankOne === biggestHandRank.rankOne){
+            if(player.handRank.rankTwo > biggestHandRank.rankTwo) fn()
+            else if(player.handRank.rankTwo === biggestHandRank.rankTwo){
+              if(player.handRank.rankThree > biggestHandRank.rankThree) fn()
+              else if(player.handRank.rankThree === biggestHandRank.rankThree){
+                if(player.handRank.rankFour > biggestHandRank.rankFour) fn()
+                else if(player.handRank.rankFour === biggestHandRank.rankFour){
+                  if(player.handRank.rankThree > biggestHandRank.rankThree)fn()
+      }}}}}
+      function fn(){
+        winnerId = player.id
+      }
+    }
+  )
+
+  for(let i=0;i < game.players.length;i++){
+    if(game.players[i].id === winnerId){
+      game.players[i].chips += game.state.pot
+    }
   }
   /* 待添加：比较手牌+胜负判断+结算页面+再来一局/破产清算 */
 

@@ -7,7 +7,13 @@
   <script src="./js/poker.js"></script>
 </head>
 <body>
-
-  <script src="./js/我也是个试验品.js"></script>
+  <span id="betOfThisTurn_1">筹码</span>
+  <button class="button">点我</button>
+  <script>
+    const betOfThisTurn_1 = document.querySelector('#betOfThisTurn_1')
+    betOfThisTurn_1.innerHTML = '你好'
+    const button = document.querySelector('.button')
+    button.onclick = (() => betOfThisTurn_1.innerHTML = "我又变了")
+  </script>
 </body>
 </html>
