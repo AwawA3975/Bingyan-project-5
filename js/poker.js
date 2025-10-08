@@ -293,6 +293,8 @@ async function bettingTime(){
     
     /* 跳过已经allIn和fold的人  */
     if(player.chips !== 0 && player.folded !== true) {
+      // 0.行动人员高亮
+      document.getElementById(`player${Index + 1}`).classList.add('action') 
       // 1.获得行动
       if(Index === 0)  await getMyAction()     
       else  await getBotAction(player.card,game.state.communityCards)
@@ -345,6 +347,8 @@ async function bettingTime(){
           }
       }
     }
+    // 移除边框
+    document.getElementById(`player${Index + 1}`).classList.remove('action') 
     Index++
     if(Index>=game.players.length) Index = 0
     console.log(Index);
@@ -487,7 +491,7 @@ for(let i = 1;i < game.players.length;i++){
   bots.push(robot)
 }
 console.log(bots);
-/* 获取操作区元素+滑块更新+按钮变化 */
+/* 获取操作区元素 */
 const check = document.getElementById('check')
 const bet = document.getElementById('bet')
 const call = document.getElementById('call')
@@ -497,11 +501,13 @@ const range = document.getElementById('range')
 const submit = document.getElementById('submit')
 const buttons = document.querySelectorAll('.button')
 const rangeValue = document.getElementById('rangeValue')
+/* 滑块设置 */
 range.addEventListener('input', function() {
     const value = Math.round(this.valueAsNumber/ 10) * 10
     rangeValue.textContent = value; // 更新显示
     this.value = value; // 确保滑块停在10的倍数上
 })
+/* 按钮变化/记录选择 */
 let myChoice = ''
 let myBet = 0
 buttons.forEach(button => {
@@ -517,15 +523,10 @@ buttons.forEach(button => {
     }
   })
 })
-/* 左侧筹码及筹码池显示变化 */
-// console.log(document.getElementById('betOfThisTurn_1'));
-// for(let i = 0;i<game.players.length;i++){
-//   document.getElementById(`betOfThisTurn_${i+1}`).innerHTML = game.players[i].betOfThisTurn + game.players[i].currentBet
-// }
-// document.getElementById('betPool').innerHTML = game.state.pot + pool()
+/*  */
 
 
-runGame()
+// runGame()
 async function runGame(){
   // 1.preflop
   // 1)发牌

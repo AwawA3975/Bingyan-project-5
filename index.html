@@ -11,37 +11,38 @@
   <div id="container">
     <!-- 左侧玩家/筹码 -->
     <div id="players">
-      <div class="one-player me">
+      <div class="one-player me" id="player1">
         <div class="profile-photo"><img src="./sources/头像/1.png" alt="Me"></div>
-        <div class="personal-bet"><span id="betOfThisTurn_1">筹码</span></div>
+        <div class="personal-bet"><span id="betOfThisTurn_1">0</span></div>
       </div>
-      <div class="one-player">
+      <div class="one-player" id="player2">
         <div class="profile-photo"><img src="./sources/头像/2.png" alt="Player 2"></div>
-        <div class="personal-bet"><span id="betOfThisTurn_2">筹码</span></div>
+        <div class="personal-bet"><span id="betOfThisTurn_2">0</span></div>
       </div>
-      <div class="one-player">
+      <div class="one-player" id="player3">
         <div class="profile-photo"><img src="./sources/头像/3.png" alt="Player 3"></div>
-        <div class="personal-bet"><span id="betOfThisTurn_3">筹码</span></div>
+        <div class="personal-bet"><span id="betOfThisTurn_3">0</span></div>
       </div>
-      <div class="one-player">
+      <div class="one-player" id="player4">
         <div class="profile-photo"><img src="./sources/头像/2.png" alt="Player 4"></div>
-        <div class="personal-bet"><span id="betOfThisTurn_4">筹码</span></div>
+        <div class="personal-bet"><span id="betOfThisTurn_4">0</span></div>
       </div>
-      <div class="one-player">
+      <div class="one-player" id="player5">
         <div class="profile-photo"><img src="./sources/头像/1.png" alt="Player 5"></div>
-        <div class="personal-bet"><span id="betOfThisTurn_5">筹码</span></div>
+        <div class="personal-bet"><span id="betOfThisTurn_5">0</span></div>
       </div>
-      <div class="one-player">
+      <div class="one-player" id="player6">
         <div class="profile-photo"><img src="./sources/头像/1.png" alt="Player 6"></div>
-        <div class="personal-bet"><span id="betOfThisTurn_6">筹码</span></div>
+        <div class="personal-bet"><span id="betOfThisTurn_6">0</span></div>
       </div>
       
-      <div class="bet-pool" id="betPool">
-        筹码池
+      <div id="betPool">
+        <div id="betPoolName">筹码池</div>
+        <div id="betPoolNumber">0</div>
       </div>
     </div>
     <!-- 右侧上方牌池 -->
-    <div id="card-pool" style="background-color: antiquewhite;">
+    <div id="card-pool">
       <!-- 左上方总牌堆 -->
       <div class="header">
         <div class="cards">
@@ -100,7 +101,7 @@
       </div>
     </div>
     <!-- 下方按钮区  my-behaviour-->
-    <div id="my-behaviour" style="background-color: rgba(202, 223, 14, 0.449);">
+    <div id="my-behaviour">
       <button type="button" class="button" id="check" >Check</button>
       <button type="button" class="button" id="bet">Bet</button>
       <button type="button" class="button" id="call">Call</button>
