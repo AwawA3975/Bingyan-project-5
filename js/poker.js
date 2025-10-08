@@ -6,7 +6,7 @@ const game = {
     phase: 'preflop', /* 游戏阶段 */
     pot: 0,/* 赌池中全部赌注 */
     communityCards: [],
-    Button: 5,/* 庄家id */
+    Button: 2,/* 庄家id */
     // dealerPosition: 2,/* 当前行动人 */
     smallBlind: 10,
     bigBlind: 20
@@ -265,7 +265,78 @@ function bettingTime(){
   // 下注循环
   while(!bettingComplete){
     let i = game.state.Button +1
+    if(i>=game.players.length) i = 0
     const player = game.players[i]
+    // 1.获得行动
+    /* 盲注特殊状态:跳过获取行动环节 */
+    if(player.currentBet === 0 ){
+      if(i === 0)  getMyAction()     
+        else  getBotAction()
+    }else player.actionType = 'blind'/* 感觉有点问题？最后一天记得来这边检查一下 */
+    
+    // 2.循环 行动轮
+    // chip重新计算放到下面循环中
+    if(player.chips === 0 || player.folded === true) continue /* 跳过已经allIn和fold的人  */
+    if(player.allIn === true){
+      currentBetPool += player.chips
+      maxBet = maxBet>player.chips ?maxBet:player.chips
+      addedBet = maxBet>player.chips ?addedBet:player.chips
+      player.chips = 0
+    }else if(game.state.phase === 'preflop' || currentBetPool !== 0){
+      switch(player.actionType){
+        case 'blind':
+          currentBetPool += player.currentBet
+          maxBet = game.state.bigBlind
+          addedBet = game.state.bigBlind
+          break
+          case 'fold':
+          player.folded = true
+          break
+          case 'call':
+            // player.currentBet = maxBet
+          currentBetPool += maxBet
+          player.chips -=player.currentBet
+          break
+          case 'raise':
+            /* 需补充：下注额必须至少是“maxBet + addedBet”​​。 */
+          // player.currentBet = player.currentBet
+          // maxBet = maxBet>player.currentBet? maxBet : player.currentBet
+          addedBet = player.currentBet - maxBet
+          maxBet = player.currentBet
+          currentBetPool += player.currentBet
+          player.chips -=player.currentBet
+          break
+        }
+      }else{
+        switch(player.actionType){
+          case 'check':
+            break
+        case 'bet':
+          /* 需补充下注大于等于大盲注 */
+          // player.currentBet = player.currentBet
+          addedBet = player.currentBet
+          maxBet = player.currentBet
+          currentBetPool += player.currentBet
+          player.chips -=player.currentBet
+          break
+        }
+    }
+    i++
+    if(i>=game.players.length) i = 0
+    
+    // 下注轮结束判断
+    let completedNumber = 0
+    for(let i = 0;i<game.players.length;i++){
+      const player = game.players[i]
+      if(player.allIn || player.folded || player.currentBet === maxBet){
+        completedNumber +=1
+      }
+    }
+    if(completedNumber === game.players.length) bettingComplete = true
+
+    // 函数部分
+    // 获得所有人的输入(actionType\player.currentBet)后存入game.players
+    // 存到game.player中！
     // 1.获得玩家行动
     function getMyAction(){
       // 状态判断：非preflop轮且currentBetPool=0时仅check和bet可用；
@@ -324,77 +395,17 @@ function bettingTime(){
     }  
     // 2.获得机器人行动
     function getBotAction(){
-
+      /* 获取第i个个机器人 */
+      /* 记得补充！！ */
+      const bot = [robot1, robot2, robot3, robot4, robot5].find(b => b.name === `robot${i}`);
+      const strength = bot.evaluateCards(player.card,game.state.communityCards)
+      const action = bot.decideAction(strength)
+      player.actionType = action.actionType
+      player.currentBet = action.currentBet
+      player.folded = action.folded
+      player.allIn = action.allIn
+      
     }
-    // 获得所有人的输入(actionType\player.currentBet)后存入game.players
-    // 存到game.player中！
-    // chip重新计算放到下面循环中
-    
-    // 3.循环 行动轮
-    /* 盲注特殊状态:跳过获取行动环节 */
-    if(player.currentBet === 0 ){
-      getMyAction()
-      getBotAction()
-    }else player.actionType = 'blind'/* 感觉有点问题？最后一天记得来这边检查一下 */
-    
-    /* 跳过弃牌/allIn玩家 */
-    if(player.chips === 0 || player.folded === true) continue /* 跳过已经allIn和fold的人  */
-    
-    if(player.allIn === true){
-      currentBetPool += player.chips
-      maxBet = maxBet>player.chips ?maxBet:player.chips
-      addedBet = maxBet>player.chips ?addedBet:player.chips
-      player.chips = 0
-    }else if(game.state.phase === 'preflop' || currentBetPool !== 0){
-      switch(actionType){
-        case 'blind':
-          currentBetPool += player.currentBet
-          maxBet = game.state.bigBlind
-          addedBet = game.state.bigBlind
-          break
-        case 'fold':
-          player.folded = true
-          break
-        case 'call':
-          // player.currentBet = maxBet
-          currentBetPool += maxBet
-          player.chips -=player.currentBet
-          break
-        case 'raise':
-          /* 需补充：下注额必须至少是“maxBet + addedBet”​​。 */
-          // player.currentBet = player.currentBet
-          // maxBet = maxBet>player.currentBet? maxBet : player.currentBet
-          addedBet = player.currentBet - maxBet
-          maxBet = player.currentBet
-          currentBetPool += player.currentBet
-          player.chips -=player.currentBet
-          break
-      }
-    }else{
-      switch(actionType){
-        case 'check':
-          break
-        case 'bet':
-          /* 需补充下注大于等于大盲注 */
-          // player.currentBet = player.currentBet
-          addedBet = player.currentBet
-          maxBet = player.currentBet
-          currentBetPool += player.currentBet
-          player.chips -=player.currentBet
-          break
-      }
-    }
-    i++
-    if(i>=game.players.length) i = 0
-    // 下注轮结束判断
-    let completedNumber = 0
-    for(let i = 0;i<game.players.length;i++){
-      const player = game.players[i]
-      if(player.allIn || player.folded || player.currentBet === maxBet){
-        completedNumber +=1
-      }
-    }
-    if(completedNumber === game.players.length) bettingComplete = true
   }
   // 下注结束 处理数据/个人状态更新
   game.state.pot += currentBetPool
@@ -416,11 +427,10 @@ range = document.getElementById('range')
 submit = document.getElementById('submit')
 buttons = document.querySelectorAll('.button')
 
-const robot1 = new PokerBot(robot1)
-const robot2 = new PokerBot(robot2)
-const robot3 = new PokerBot(robot3)
-const robot4 = new PokerBot(robot4)
-const robot5 = new PokerBot(robot5)
+for(let i = 1;i < game.players.length;i++){
+  const robot = new PokerBot(`robot${i}`)
+  game.players[i].name = robot
+}
 
 // 1.preflop
 // 1)发牌
@@ -451,7 +461,7 @@ for(i=0;i<game.players.length;i++){
 }
 console.log(game.players);
 // 3)下注行动轮
-// bettingTime()
+bettingTime()
 
 // 2.flop
 game.state.phase = 'flop'
