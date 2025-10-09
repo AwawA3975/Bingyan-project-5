@@ -24,7 +24,7 @@ const game = {
       card: [],
       handLevel: 0,
       handRank : {},
-      actionType:'',
+      actionType:null,
       currentBet: 0,/* 这一轮 */
       betOfThisTurn:0,/* 总共的 */
       folded: false,
@@ -37,7 +37,7 @@ const game = {
       card: [],
       handLevel: 0,
       handRank : {},
-      actionType:'',
+      actionType:null,
       currentBet: 0,
       betOfThisTurn:0,
       folded: false,
@@ -50,7 +50,7 @@ const game = {
       card: [],
       handLevel: 0,
       handRank : {},
-      actionType:'',
+      actionType:null,
       currentBet: 0,
       betOfThisTurn:0,
       folded: false,
@@ -63,7 +63,7 @@ const game = {
       card: [],
       handLevel: 0,
       handRank : {},
-      actionType:'',
+      actionType:null,
       currentBet: 0,
       betOfThisTurn:0,
       folded: false,
@@ -76,7 +76,7 @@ const game = {
       card: [],
       handLevel: 0,
       handRank : {},
-      actionType:'',
+      actionType:null,
       currentBet: 0,
       betOfThisTurn:0,
       folded: false,
@@ -89,7 +89,7 @@ const game = {
       card: [],
       handLevel: 0,
       handRank : {},
-      actionType:'',
+      actionType:null,
       currentBet: 0,
       betOfThisTurn:0,
       folded: false,
@@ -153,10 +153,9 @@ function dealOthersCard(arr){
 
 // 3.机器人们
 class PokerBot {
-  constructor(name,chips){
+  constructor(name){
     this.name = name
     this.aggression = 0.5+Math.random()*0.5
-    this.chips = chips
   }
   /* 输入手牌和已有公共牌，返回强度 */
   evaluateCards(card,communityCards){
@@ -227,23 +226,23 @@ class PokerBot {
   }
   /* 根据手牌强度返回行为 */
   /* 返回一个包含行为和赌金的对象，之后再赋值到game.players中 */
-  decideAction(handStrength){
+  decideAction(handStrength,chips){
     const randomFactor = (Math.random() * 0.2) - 0.1;
     let adjustedStrength = handStrength * this.aggression + randomFactor
     adjustedStrength = Math.max(0, Math.min(1, adjustedStrength))
     let action = {}
-    console.log(`决策参数: strength=${handStrength}, adjusted=${adjustedStrength}, chips=${this.chips}`)
+    console.log(`决策参数: strength=${handStrength}, adjusted=${adjustedStrength}, chips=${chips}`)
     /* 判断行为 */
     if(game.state.phase === 'preflop' || pool() !== 0){
       if(adjustedStrength >= 0.8)  action = {actionType: 'raise', currentBet: this.calculateRaiseAmount(adjustedStrength),allIn:false}
-      else if(adjustedStrength >= 0.5){
+      else if(adjustedStrength >= 0.3){
         /* 记得根据流程把这里的 game.players[0].chips换掉！*/
-          if(this.chips <= maxBet()) action = {actionType:'call',currentBet:game.players[0].chips,allIn:true}
+          if(chips <= maxBet()) action = {actionType:'call',currentBet:game.players[0].chips,allIn:true}
           else action = { actionType:'call',currentBet : maxBet(),allIn:false}
       }else action = { actionType:'fold',currentBet:0,allIn:false}
     }else{
-      if(adjustedStrength >= 0.6)action = {actionType:'bet', currentBet: this.calculateBetAmount(adjustedStrength),allIn:false}
-      else action ={actionType:'check',currentBet:0,allIn:false}
+      if(adjustedStrength >= 0.7)action = {actionType:'bet', currentBet: this.calculateBetAmount(adjustedStrength),allIn:false}
+      else action = {actionType:'check',currentBet:0,allIn:false}
     }
     console.log(action)
     return action
@@ -267,7 +266,7 @@ class PokerBot {
 /* 配置机器人 */
 const bots = []
 for(let i = 1;i < game.players.length;i++){
-  const robot = new PokerBot(`robot${i}`,game.players[i].chips)
+  const robot = new PokerBot(`robot${i}`)
   game.players[i].name = robot.name
   bots.push(robot)
 }
@@ -281,6 +280,12 @@ const range = document.getElementById('range')
 const submit = document.getElementById('submit')
 const buttons = document.querySelectorAll('.button')
 const rangeValue = document.getElementById('rangeValue')
+
+const betPoolNumber = document.getElementById('betPoolNumber')
+const phase = document.getElementById('phase')
+const myChoiceOTP = document.getElementById('myChoice')
+const myBetOTP = document.getElementById('myBet')
+
 /* 滑块设置 */
 range.addEventListener('input', function() {
     const value = Math.round(this.valueAsNumber/ 10) * 10
@@ -288,12 +293,14 @@ range.addEventListener('input', function() {
     this.value = value; // 确保滑块停在10的倍数上
 })
 /* 按钮变化/记录选择 */
+updateButtonStates()/* 放在最后 */
 let myChoice = ''
 let myBet = 0
+let whetherAllIn = false
 buttons.forEach(button => {
   button.addEventListener('click', () => {
     myChoice = button.id;
-    submit.disabled = false; // 允许提交
+    submit.style.display = 'flex'; // 允许提交
     if (myChoice === 'bet' || myChoice === 'raise') {
       range.style.display = 'flex';
       rangeValue.style.display = 'flex';
@@ -301,6 +308,37 @@ buttons.forEach(button => {
       range.style.display = 'none';
       rangeValue.style.display = 'none';
     }
+    switch(myChoice){
+      case 'call':
+        myBet = maxBet()
+        if(game.players[0].chips <= maxBet()){
+          myBet = game.players[0].chips
+          whetherAllIn = true
+        }
+        break
+      case 'raise':
+        range.style.display = 'flex'
+        range.min = (maxBet() + addedBet()) < game.players[0].chips ? maxBet() + addedBet() : game.players[0].chips
+        range.max = game.players[0].chips
+        myBet = range.valueAsNumber
+        if(myBet === game.players[0].chips) whetherAllIn = true
+        break
+      case 'bet':
+        range.style.display = 'flex'
+        range.min = game.state.bigBlind < game.players[0].chips ? game.state.bigBlind : game.players[0].chips
+        range.max = player.chips
+        myBet = range.valueAsNumber
+        if(myBet === game.players[0].chips) whetherAllIn = true
+        break
+      case 'check':
+        myBet = 0
+        break
+      case 'fold':
+        myBet = 0
+        break
+    }
+    myChoiceOTP.innerHTML = myChoice
+    myBetOTP.innerHTML = myBet
   })
 })
 /* 大小盲注页面上筹码渲染*/
@@ -312,8 +350,9 @@ runOneGame()
 /* 包含发牌，不同阶段下注发牌，该局结果判断，赢家筹码再计算 */
 async function runOneGame(){
   // 1.preflop
-  // 1)发牌
   game.state.phase = 'preflop'
+  phase.innerHTML = game.state.phase
+  // 1)发牌
   dealCard(game.players[0].card)
   dealCard(game.players[0].card)
   for(let i = 1;i<game.players.length;i++){
@@ -356,25 +395,30 @@ async function runOneGame(){
   document.getElementById('betPoolNumber').innerHTML = game.state.pot + pool()
   // 3)下注行动轮
   await bettingTime()
-  
+  renewAfterBetting()
   // 2.flop
   game.state.phase = 'flop'
+  phase.innerHTML = game.state.phase
   dealCard(game.state.communityCards)
   dealCard(game.state.communityCards)
   dealCard(game.state.communityCards)
   await bettingTime()
-  
+  renewAfterBetting()
   // 3.turn
   game.state.phase = 'turn'
+  phase.innerHTML = game.state.phase
   dealCard(game.state.communityCards)
   await bettingTime()
-  
+  renewAfterBetting()
   // 4.river
   game.state.phase = 'river'
+  phase.innerHTML = game.state.phase
   dealCard(game.state.communityCards)
   await bettingTime()
-  
+  renewAfterBetting()
   // 5.showdown
+  game.state.phase = 'showdown'
+  phase.innerHTML = game.state.phase
   for(let i=0;i < game.players.length;i++){
     const outcome = judgingOnePlayer(game.players[i].card,game.state.communityCards)
     game.players[i].handLevel = outcome.handLevel
@@ -382,7 +426,7 @@ async function runOneGame(){
   }
   
   /* 判断赢家 */
-  const winnerId  = 0
+  let winnerId  = 0
   let biggestHandLevel = 0
   let biggestHandRank = {
     rankOne:0,
@@ -412,6 +456,9 @@ async function runOneGame(){
   )
   const winner = game.players[winnerId -1]
   winner.chips += game.state.pot
+
+  const conclusion = document.getElementById('conclusion')
+  conclusion.innerHTML = `本局游戏已结束！</br>胜利者是：${winner.id}号玩家${winner.name}。</br>他赢得了${game.state.pot}筹码！`
   /* 待添加：比较手牌+胜负判断+结算页面+再来一局/破产清算 */
 
 }
@@ -426,16 +473,16 @@ async function bettingTime(){
     maxBet(0)/* 该轮次最高下注 */
     addedBet(0)/* 该轮次加注 */
   }else{
-    pool(0)
+    pool(game.state.bigBlind + game.state.smallBlind)
     maxBet(game.state.bigBlind)/* 该轮次最高下注 */
     addedBet(game.state.bigBlind)/* 该轮次加注 */
   }
-  
   let Index = game.state.Button + 2
   if(Index>=game.players.length) Index = 0
   
   // 下注循环
   while(!bettingComplete){
+    updateButtonStates()
     const player = game.players[Index]
     console.log('开始下注轮，当前玩家:', player.name)
     
@@ -445,9 +492,9 @@ async function bettingTime(){
       document.getElementById(`player${Index + 1}`).classList.add('action') 
       // 1.获得行动
       if(Index === 0)  await getMyAction()     
-      else  await getBotAction(player.card,game.state.communityCards,player)
+        else  await getBotAction(player.card,game.state.communityCards,player,player.chips)
       console.log(player);
-    
+      
       // 2.循环 行动轮
       // chip重新计算放到下面循环中
       if(player.allIn === true){
@@ -461,12 +508,17 @@ async function bettingTime(){
             player.folded = true
             break
           case 'call':
-            if(Index === game.state.Button && maxBet() === game.state.bigBlind)  player.currentBet -= game.state.smallBlind
-            pool(pool() + maxBet())
-            player.chips -=player.currentBet
+            if(Index === game.state.Button && maxBet() === game.state.bigBlind) {
+              player.currentBet -= game.state.smallBlind
+              pool(pool() + player.currentBet)
+              player.chips -=player.currentBet
+            }else{
+              pool(pool() + maxBet())
+              player.chips -= maxBet()
+            }
             break
           case 'raise':
-              /* 需补充：下注额必须至少是“maxBet() + addedBet()”​​。 */
+            /* 需补充：下注额必须至少是“maxBet() + addedBet()”​​。 */
             // player.currentBet = player.currentBet
             // maxBet = maxBet>player.currentBet? maxBet : player.currentBet
             addedBet(player.currentBet - maxBet())
@@ -474,9 +526,9 @@ async function bettingTime(){
             pool(pool()+player.currentBet)
             player.chips -=player.currentBet
             break
-          }
-      }else{
-        switch(player.actionType){
+        }
+        }else{
+          switch(player.actionType){
           case 'check':
             break
           case 'bet':
@@ -496,14 +548,15 @@ async function bettingTime(){
     if(player.folded === true){
       document.getElementById(`player${Index + 1}`).classList.add('fold')
     }
-    Index++
-    if(Index>=game.players.length) Index = 0
     /* 更新筹码状态 */
     for(let i = 0;i<game.players.length;i++){
       document.getElementById(`betOfThisTurn_${i+1}`).innerHTML = game.players[i].betOfThisTurn + game.players[i].currentBet
     }
     document.getElementById('betPoolNumber').innerHTML = game.state.pot + pool()
-
+    /* 循环继续 */
+    Index++
+    if(Index>=game.players.length) Index = 0
+    
     console.log(`当前玩家下注金额${player.currentBet}，当前最高下注${maxBet()}`);
     // 下注轮结束判断
     let completedNumber = 0;
@@ -526,17 +579,7 @@ async function bettingTime(){
       bettingComplete = true;
       console.log('下注轮结束');
     }
-    // 下注结束 处理数据/个人状态更新
-    game.state.pot += pool()
-    pool(0)
-    game.players.forEach(
-      function(player){
-        player.betOfThisTurn += player.currentBet
-        player.currentBet = 0
-        player.actionType = ''
-      }
-    )
-    
+
     // 函数部分
     // 获得所有人的输入(actionType\player.currentBet)后存入game.players
     // 存到game.player中！
@@ -544,55 +587,8 @@ async function bettingTime(){
     function getMyAction(){
       return new Promise((resolve) => {
         // 按钮更新
-        /* 状态判断：非preflop轮且currentBetPool=0时仅check和bet可用； */
-        /* 其余时间仅另外三个可用 */
         submit.disabled = false
-        updateButtonStates()
-        function updateButtonStates() {
-          const canCheck = (game.state.phase !== 'preflop' && pool() === 0);
-          check.disabled = !canCheck;
-          bet.disabled = !canCheck;
-          call.disabled = canCheck;
-          raise.disabled = canCheck;
-          fold.disabled = canCheck;
-        }
-        // // 前一名玩家行动完后玩家方可提交自己该轮次行为
-        // if(game.players[game.players.length-1].allIn || game.players[game.players.length-1].folded || game.players[game.players.length-1].currentBet === maxBet){
-        //   submit.disabled = false
-        // }
-        // 获取玩家该轮次行为
-        let whetherAllIn = false
-        switch(myChoice){
-          case 'call':
-            myBet = maxBet()
-            if(game.players[0].chips <= maxBet()){
-              myBet = game.players[0].chips
-              whetherAllIn = true
-            }
-            break
-          case 'raise':
-            range.style.display = 'flex'
-            range.min = (maxBet() + addedBet()) < game.players[0].chips ? maxBet() + addedBet() : game.players[0].chips
-            range.max = game.players[0].chips
-            myBet = range.valueAsNumber
-            if(myBet === game.players[0].chips) whetherAllIn = true
-            break
-          case 'bet':
-            range.style.display = 'flex'
-            range.min = game.state.bigBlind < game.players[0].chips ? game.state.bigBlind : game.players[0].chips
-            range.max = player.chips
-            myBet = range.valueAsNumber
-            if(myBet === game.players[0].chips) whetherAllIn = true
-            break
-          case 'check':
-            myBet = 0
-            break
-          case 'fold':
-            myBet = 0
-            break
-        }
-        // 记得增加一块显示玩家的选择和下注金额!
-        
+
         // 点击submit 将行为和赌金传入game.player[0]/改变按钮状态
         submit.addEventListener('click',function(){
           if(!myChoice) return
@@ -601,7 +597,7 @@ async function bettingTime(){
           game.players[0].allIn = whetherAllIn
           document.getElementById(`betOfThisTurn_1`).innerHTML = game.players[0].betOfThisTurn + game.players[0].currentBet
           buttons.forEach(button => button.disabled = true)
-          submit.disabled = true
+          submit.style.display = 'none'
           range.style.display ='none'
           
           console.log(myChoice);
@@ -611,22 +607,30 @@ async function bettingTime(){
       })
     }  
     // 2.获得机器人行动
-    function getBotAction(card,communityCards,player){
+    function getBotAction(card,communityCards,player,chips){
       return new Promise((resolve) => {
         const bot = bots[Index - 1]
         const delay = 2500 + Math.random() * 2000
         setTimeout(() => {
           const strength = bot.evaluateCards(card,communityCards)
-          const action = bot.decideAction(strength)
+          const action = bot.decideAction(strength,chips)
           player.actionType = action.actionType
           player.currentBet = action.currentBet
           player.allIn = action.allIn
+          // const newPlayers = JSON.parse(JSON.stringify(game.players)); // 深拷贝
+          // newPlayers[Index].actionType = action.actionType;
+          // newPlayers[Index].currentBet = action.currentBet;
+          // newPlayers[Index].allIn = action.allIn;
+          // game.players = newPlayers; 
+          // console.log(player);
+          
           resolve()
         },delay)
       })
     }
   }
 }
+
 
 
 // 三、函数
@@ -645,7 +649,29 @@ function addedBet(value){
   return game.state.addedBet;
 }
 
-// 2.判断牌型牌面(包含预处理部分)  就是下面两个加起来
+// 2.更新按钮
+function updateButtonStates() {
+  const canCheck = (game.state.phase !== 'preflop' && pool() === 0);
+  check.disabled = !canCheck;
+  bet.disabled = !canCheck;
+  call.disabled = canCheck;
+  raise.disabled = canCheck;
+  fold.disabled = canCheck;
+}
+// 3. 更新状态   下注结束，处理数据/个人状态更新
+function renewAfterBetting(){
+  game.state.pot += pool()
+  pool(0)
+  game.players.forEach(
+    function(player){
+      player.betOfThisTurn += player.currentBet
+      player.currentBet = 0
+      player.actionType = ''
+    }
+  )
+}
+
+// 4.判断牌型牌面(包含预处理部分)  就是下面两个加起来
 /* 输入未处理过的分开两个数组 */
 function judgingOnePlayer(card,communityCards){
   // 1.预处理

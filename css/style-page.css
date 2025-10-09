@@ -83,11 +83,17 @@ html, body {
     /* background-color: rgb(210, 247, 247); */
     text-align: center;
   }
-  #betPoolName{
+  #phase,#conclusion{
+    font-size: 12px;
+    color:rgba(46, 46, 46, 0.986);
+  }
+  .words{
     font-size: 9px;
     color:rgba(94, 94, 94, 0.986);
   }
-
+  #conclusion{
+    border-top: solid 1px rgb(58, 58, 58)
+  }
 
   /* 行动人员边框高亮 */
   .action{
